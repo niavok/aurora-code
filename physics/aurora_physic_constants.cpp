@@ -1,5 +1,5 @@
 #include "aurora_physic_constants.h"
-#include <assert.h> 
+#include <assert.h>
 
 namespace aurora {
 
@@ -53,7 +53,7 @@ ConstantEnumClassArray<Quantity, Liquid, LiquidCount> liquidNByVolume;
 ConstantEnumClassArray<Scalar, Liquid, LiquidCount> liquidThermalExpansionCoef;
 ConstantEnumClassArray<Scalar, Liquid, LiquidCount> liquidCompressibilityCoef;
 
-ConstantEnumClassArray<Scalar, Gas, GasCount> gasSpecifHeat;
+ConstantEnumClassArray<Scalar, Gas, GasCount> gasSpecifHeat; // Joules.kg-1.K-1
 ConstantEnumClassArray<Scalar, Gas, GasCount> gasMassByMole; // kg.mol-1
 
 /*
@@ -110,7 +110,7 @@ static Scalar liquidCompressibilityCoef[LiquidCount] =
     100., // Gold
 };
 
-static Scalar gasSpecifHeat[GasCount] = // Joules.kg-1.K-1
+static Scalar gasSpecifHeat[GasCount] =
 {
     14300, // Hydrogen
      1040, // Nitrogen
@@ -173,8 +173,12 @@ static Scalar gasSpecifHeat[GasCount] = // Joules.kg-1.K-1
 /// PhysicalConstants
 ////////////////////////
 
+static bool isInit = false;
+
 void PhysicalConstants::Init()
 {
+    assert(!isInit);
+
     Gas gas;
     // H2
     gas = Gas::Hydrogen;
@@ -228,6 +232,7 @@ void PhysicalConstants::Init()
     gasSpecifHeat.Check();
     gasMassByMole.Check();
 
+    isInit = true;
 }
 
 Quantity PhysicalConstants::EstimateSolidNByVolume(Solid material, Volume volume)
@@ -271,7 +276,7 @@ Volume PhysicalConstants::GetLiquidVolumeByN(Liquid material, Quantity N, Scalar
 
 Energy PhysicalConstants::EstimateThermalEnergy(Gas material, Quantity N, Scalar temperature)
 {
-     return Energy(gasSpecifHeat[material] * gasMassByMole[material] * molePerN * N * temperature);
+    return Energy(gasSpecifHeat[material] * gasMassByMole[material] * molePerN * N * temperature * joulePerE);
 }
 
 Quantity PhysicalConstants::EstimateGasN(Volume volume, Scalar pressure, Scalar temperature)
@@ -294,12 +299,12 @@ Scalar PhysicalConstants::ComputePressure(Quantity N, Volume volume, Scalar temp
 
 Scalar PhysicalConstants::GetSpecificHeatByN(Gas material)
 {
-    return gasSpecifHeat[material] * gasMassByMole[material] * molePerN; // TODO cache
+    return gasSpecifHeat[material] * gasMassByMole[material] * molePerN * joulePerE; // TODO cache
 }
 
 Scalar PhysicalConstants::GetMassByN(Gas material)
 {
-    return gasMassByMole[material];
+    return gasMassByMole[material] * molePerN;
 }
 
 }

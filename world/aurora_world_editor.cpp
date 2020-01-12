@@ -31,8 +31,8 @@ void WorldEditor::GenerateHelloWord()
     // Pressure 1 bar
     dryAir.Gas.composition[Gas::Nitrogen] = 80;
     dryAir.Gas.composition[Gas::Oxygen] = 20;
-    dryAir.Gas.pressure = 100000.; // 1 bar
-    dryAir.Gas.temperature = 100.; // 0 degree C
+    dryAir.Gas.pressure = 100000. ; // 1 bar
+    dryAir.Gas.temperature = 274.; // 0 degree C
 
     TileComposition steam;
     // No solid
@@ -41,26 +41,28 @@ void WorldEditor::GenerateHelloWord()
     // Temperature 125K
     // Pressure 1 bar
     steam.Gas.composition[Gas::Water] = 100;
-    steam.Gas.pressure = 100000.; // 1 bar
-    steam.Gas.temperature = 100.; // 0 degree C
-
-
-
-    int surfaceWidth = surfaceLevel->GetSize().x;
-    int surfaceHeight = surfaceLevel->GetSize().y;
-    //PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
-    PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
-
+    steam.Gas.pressure = 100000. * 0.1; // 1 bar
+    steam.Gas.temperature = 274.; // 0 degree C
 
     // Paint hot air tile
     TileComposition hotDryAir = dryAir;
     hotDryAir.Gas.temperature = 4000;
-    hotDryAir.Gas.pressure = 100000;
-    PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight / 6, surfaceWidth / 6,surfaceHeight /8));
-    
+    hotDryAir.Gas.pressure = 100000*0.1;
+
+
+    int surfaceWidth = surfaceLevel->GetSize().x;
+    int surfaceHeight = surfaceLevel->GetSize().y;
+    PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
+    //PaintTiles(surfaceLevel, hotDryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
+
+
+
+    //PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight / 6, surfaceWidth / 6,surfaceHeight /8));
+
     TileComposition highPressureDryAir = dryAir;
-    highPressureDryAir.Gas.pressure = 200000;
-    //PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(surfaceWidth / 4, 0, surfaceWidth / 6,surfaceHeight));
+    highPressureDryAir.Gas.pressure = 100000 * 200;
+    highPressureDryAir.Gas.temperature = 274.+1000;
+    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(surfaceWidth / 4, surfaceHeight/3, surfaceHeight / 32, surfaceHeight / 32));
 }
 
 
@@ -263,7 +265,7 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
             }
 
             Scalar proportion = Scalar(composition.Gas.composition[gas]) / Scalar(GasPartSum);
-            Volume GasN= Volume(totalN * proportion);
+            Quantity GasN= Quantity(totalN * proportion);
 
             totalN -= GasN;
             GasPartSum-= composition.Gas.composition[gas];

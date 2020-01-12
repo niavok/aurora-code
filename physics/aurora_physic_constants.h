@@ -9,6 +9,7 @@ class PhysicalConstants
 {
 public:
     static constexpr Scalar molePerN = 1.2e-6; // mol.N-1
+    static constexpr Scalar joulePerE = 1000; // joule.E-1
 
     static constexpr Scalar gravity = 50; // m.s-2, Acceleration of the gravity
     static constexpr Scalar gasConstantMole = 8.31446261815325; // Gas contant for mol J.mol-1.K-1
@@ -41,7 +42,6 @@ public:
     static Scalar GetMassByN(Solid material);
 
     static Scalar ComputePressure(Quantity N, Volume volume, Scalar temperature);
-
 };
 
 }

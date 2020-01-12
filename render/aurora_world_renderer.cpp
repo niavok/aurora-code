@@ -329,7 +329,9 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
             };
 
             float temperatureColor = float(temperature / 300.);
-            float pressureColor = PressureToColor(tilePressure);
+            float temperatureColor2 = float(temperature / 600.);
+
+			float pressureColor = PressureToColor(tilePressure);
             float bottomPressureColor = PressureToColor(bottomPressure);
 
 
@@ -342,8 +344,8 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
 
 
-            Color topColor(temperatureColor, 0, pressureColor);
-            Color bottomColor(temperatureColor, 0, bottomPressureColor);
+            Color topColor(temperatureColor, temperatureColor2, pressureColor);
+            Color bottomColor(temperatureColor, temperatureColor2, bottomPressureColor);
 
             Vector<Color> colors;
 
