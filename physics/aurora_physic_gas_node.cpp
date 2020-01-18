@@ -10,6 +10,7 @@ GasNode::GasNode()
     : m_altitude(0)
     , m_volume(0)
     , m_thermalEnergy(0)
+    , m_movingN(0)
 {
     for(Gas gas : AllGas())
     {
@@ -21,6 +22,7 @@ GasNode::GasNode(GasNode& node)
     : m_altitude(node.m_altitude)
     , m_volume(node.m_volume)
     , m_thermalEnergy(node.m_thermalEnergy)
+    , m_movingN(node.m_movingN)
     , m_cacheComputed(false)
 {
     for(Gas gas : AllGas())
@@ -33,6 +35,11 @@ void GasNode::SetVolume(Volume volume)
 {
     m_volume = volume;
     m_cacheComputed = false;
+}
+
+void GasNode::SetAltitudeMm(Mm altitude)
+{
+    m_altitude = altitude;
 }
 
 
@@ -147,7 +154,7 @@ void GasNode::MigrateKineticEnergy()
     }
 
     // If not section in front, divert to side
-    for(int i = 0; i < 4 ; i++)
+    /*for(int i = 0; i < 4 ; i++)
     {
         if(sectionSumByDirection[i] == 0 && energyByDirection[i] > 0)
         {
@@ -160,12 +167,12 @@ void GasNode::MigrateKineticEnergy()
             energyByDirection[rightIndex] += energyByDirection[i];
             energyByDirection[i] = 0;
         }
-    }
+    }*/
 
 
     // Transform opposite direction as heat or reflect in opposite directions
 
-    const float DiversionRatio = 1.0; // TODO remove if 0
+    /*const float DiversionRatio = 1.0; // TODO remove if 0
 
     Energy divertedEnergy[2];
 
@@ -195,9 +202,9 @@ void GasNode::MigrateKineticEnergy()
             //Energy finalEnergyCheck = ComputeEnergy();
             //assert(finalEnergyCheck == initialEnergyCheck);
         }
-    }
+    }*/
 
-    for(int i = 0; i < 2; i++)
+    /*for(int i = 0; i < 2; i++)
     {
         assert(energyByDirection[i] * energyByDirection[i+2] == 0);
     }
@@ -230,13 +237,14 @@ void GasNode::MigrateKineticEnergy()
             energyByDirection[rightIndex] += divertedEnergy[i];
         }        
     }
-
+*/
     for(int i = 0; i < 2; i++)
     {
        // assert(energyByDirection[i] * energyByDirection[i+2] == 0);
     }
     
 
+    // Dispatch energy
     for(TransitionLink& transitionLink : m_transitionLinks)
     {
 
@@ -287,7 +295,7 @@ void GasNode::MigrateKineticEnergy()
         }
     }
 
-    
+
     for(int i = 0; i < 4 ; i++)
     {
         assert(energyByDirection[i] == 0);
@@ -301,6 +309,7 @@ void GasNode::MigrateKineticEnergy()
 
 void GasNode::ApplyTransitions()
 {
+    m_movingN = 0;
     // Apply transition output
     for(TransitionLink& transitionLink : m_transitionLinks)
     {
@@ -313,6 +322,7 @@ void GasNode::ApplyTransitions()
         for(Gas gas : AllGas())
         {
             m_nComposition[gas] += link->outputMaterial[gas];
+            m_movingN += link->outputMaterial[gas];
             link->outputMaterial[gas] = 0;
         }
     }
@@ -363,7 +373,9 @@ void GasNode::ComputeCache()
     }
 
     // Compute pressure
-     m_cachePressure = PhysicalConstants::ComputePressure(m_cacheN, m_volume, m_cacheTemperature);
+    // Exclude moving N from pressure computation
+    Quantity pressureN = m_cacheN - m_movingN;
+     m_cachePressure = PhysicalConstants::ComputePressure(pressureN, m_volume, m_cacheTemperature);
     if(m_cachePressure < 0)
     {
         m_cachePressure = 0;
@@ -391,6 +403,11 @@ Quantity GasNode::GetN() const
 {
     assert(m_cacheComputed);
     return m_cacheN;
+}
+
+Quantity GasNode::GetMovingN() const
+{
+    return m_movingN;
 }
 
 Scalar GasNode::GetPressureGradient() const

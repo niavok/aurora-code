@@ -35,16 +35,38 @@ void PhysicEngine::Flush()
 }
 
 
-
+char * sprintf_int128( __int128_t n ) {
+    static char str[41] = { 0 };        // sign + log10(2**128) + '\0'
+    char *s = str + sizeof( str ) - 1;  // start at the end
+    bool neg = n < 0;
+    if( neg )
+        n = -n;
+    do {
+        *--s = "0123456789"[n % 10];    // save last digit
+        n /= 10;                // drop it
+    } while ( n );
+    if( neg )
+        *--s = '-';
+    return s;
+}
 
 void PhysicEngine::Step(Scalar delta)
 {
-    auto ComputeEnergy = [this]()
+    static int stepCount = 0;
+    printf("PhysicEngine::Step %d\n", stepCount);
+    stepCount++;
+
+
+    auto ComputeEnergy = [this](char* label)
     {
         __int128 energy = 0;
         for(FluidNode* node : m_nodes)
         {
             energy += node->GetCheckEnergy();
+            if(node->GetCheckEnergy() < 0)
+            {
+                 printf("Node %p e=%lld (%s)\n", node, node->GetCheckEnergy(), sprintf_int128(energy));
+            }
         }
 
         for(Transition* transition : m_transitions)
@@ -56,14 +78,24 @@ void PhysicEngine::Step(Scalar delta)
                 energy += transition->GetNodeLink(i)->inputKineticEnergy;
                 energy += transition->GetNodeLink(i)->outputThermalEnergy;
                 energy += transition->GetNodeLink(i)->outputKineticEnergy;
+
+                if(energy < 0)
+            {
+                 printf("Transition inputKineticEnergy=%lld outputThermalEnergy=%lld outputKineticEnergy=%lld (%s)\n",
+                  transition->GetNodeLink(i)->inputKineticEnergy,
+                  transition->GetNodeLink(i)->outputThermalEnergy,
+                   transition->GetNodeLink(i)->outputKineticEnergy, sprintf_int128(energy));
+            }
             }
         }
+
+        //printf("ComputeEnergy %s %s\n", label, sprintf_int128(energy));
 
         return energy;
     };
 
     // Check
-    __int128 initialTotalEnergy = ComputeEnergy();
+    __int128 initialTotalEnergy = ComputeEnergy("initial");
     __int128 initialTotalN = 0;
     for(FluidNode* node : m_nodes)
     {
@@ -85,8 +117,7 @@ void PhysicEngine::Step(Scalar delta)
         // TODO move to post step to remove one compute cache ?
         node->ComputeCache();
 
-        //__int128 check = ComputeEnergy();
-        
+        //__int128 check = ComputeEnergy("after prepare");
         //assert(initialTotalEnergy == check);
     }
 
@@ -105,6 +136,10 @@ void PhysicEngine::Step(Scalar delta)
         transition->Step(delta);
         //__int128 check2 = ComputeEnergy();
         //assert(initialTotalEnergy == check2);
+
+        //__int128 check = ComputeEnergy("after step");
+        //printf("%s -> %s\n", sprintf_int128(initialTotalEnergy), sprintf_int128(check));
+        //assert(initialTotalEnergy == check);
     }
 
     __int128 finalTotalEnergy = 0;
@@ -118,7 +153,7 @@ void PhysicEngine::Step(Scalar delta)
         finalTotalN += node->GetCheckN();
     }
 
-    __int128 check = ComputeEnergy();
+    __int128 check = ComputeEnergy("after all step");
 // TODO REPAIR
     assert(initialTotalEnergy == check);
     assert(initialTotalN == finalTotalN);
@@ -137,7 +172,7 @@ void PhysicEngine::Step(Scalar delta)
     }
 
 
-#if 1
+#if 0
     {
         GasNode* node =(GasNode*) m_nodes[597];
         //node->AddThermalEnergy(10000 * node->GetN());
@@ -147,11 +182,11 @@ void PhysicEngine::Step(Scalar delta)
     }
 #endif
 
-#if 1
+#if 0
     {
         GasNode* node =(GasNode*) m_nodes[123];
         //node->AddThermalEnergy(10000 * node->GetN());
-        
+
         //node->AddThermalEnergy(-0.1 * node->GetN());
         node->TakeThermalEnergy(0.1 * node->GetThermalEnergy());
         node->ComputeCache();

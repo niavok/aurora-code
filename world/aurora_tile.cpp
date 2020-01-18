@@ -11,9 +11,10 @@ namespace aurora {
 Tile::Tile(Mm size, Mm2 position)
 	: m_size(size)
 	, m_position(position)
+    , m_altitude(-(position.y + size / 2))
     , m_worldArea(position, Mm2(size, size)) {
 
-    m_content = new TileContent(GetVolume()); // TODO optimized in case of tile that will be splitted
+    m_content = new TileContent(GetVolume(), m_altitude); // TODO optimized in case of tile that will be splitted
 	//printf("AuroraTile new AuroraTileContent %p\n", m_content);
 }
 
@@ -90,7 +91,7 @@ Tile::~Tile()
 
 Volume Tile::GetVolume() const
 {
-    return MnSquareToVolume(m_size);
+    return MmSquareToVolume(m_size);
 }
 
 bool Tile::IsComposite() const
@@ -122,7 +123,7 @@ void Tile::SetContent(TileContent const& content)
 			delete child;
 		}
 		m_children.clear();
-        m_content = new TileContent(GetVolume());
+        m_content = new TileContent(GetVolume(), m_altitude);
 	}
 
 	m_content->SetContent(content);
@@ -154,7 +155,7 @@ bool Tile::Split(Level* level)
         // Already composite
         return true;
     }
-    else if(m_size <= level->GetMinTileSize())
+    else if(m_size <= level->GetMinTileSizeMm())
     {
         //printf("Split tile : too small %f\n", m_size);
         // Too small, cannot split
@@ -300,10 +301,12 @@ void Tile::FindTileAt(std::vector<Tile*>& matchs, MmRect area)
 ///// AuroraTileContent
 //////////////////////////
 
-TileContent::TileContent(Volume volume)
+TileContent::TileContent(Volume volume, Mm altitude)
     : m_volume(volume)
 {
+    m_gasNode.SetAltitudeMm(altitude);
 
+    // TODO set liquid and solid altitude
 }
 
 TileContent::~TileContent()
@@ -508,7 +511,11 @@ void TileContent::SetContent(TileContent const& content)
     m_solidVolume = content.m_solidVolume;
     m_solidComposition = content.m_solidComposition;
     m_solidThermalEnergy = content.m_solidThermalEnergy;
+
+    // Keep altitude
+    Mm oldAltitude = m_gasNode.GetAltitudeMm();
     m_gasNode = content.m_gasNode;
+    m_gasNode.SetAltitudeMm(oldAltitude);
 
     for(LiquidNode* liquidNode: content.m_liquidNodes)
     {
@@ -518,7 +525,7 @@ void TileContent::SetContent(TileContent const& content)
 
 TileContent TileContent::TakeProportion(int proportion)
 {
-    TileContent tileProportion(m_volume / proportion);
+    TileContent tileProportion(m_volume / proportion, 0);
 
     // Take solid
     std::vector<Solid> solidsToRemove;

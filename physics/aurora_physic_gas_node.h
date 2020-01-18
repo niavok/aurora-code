@@ -29,12 +29,17 @@ public:
     Scalar GetPressure() const;
     Scalar GetTemperature() const;
     Quantity GetN() const;
+    Quantity GetMovingN() const;
     Scalar GetPressureGradient() const;
 
 
     Energy GetEnergy() const;
     Energy GetCheckEnergy() const { return m_thermalEnergy; }
     Quantity GetCheckN() const { return m_cacheCheckN; }
+
+    Mm GetAltitudeMm() const { return m_altitude; }
+    void SetAltitudeMm(Mm altitude);
+
 
     //Scalar ComputePressure() const;
     //Scalar ComputeTemperature() const;
@@ -58,6 +63,7 @@ private:
     //Quantity m_N; // TODO cache ?
     GasComposition m_nComposition;
     Energy m_thermalEnergy;
+    Quantity m_movingN;
 
     // Cache
     bool m_cacheComputed;

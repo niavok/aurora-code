@@ -28,12 +28,12 @@ public:
 
     void Update(Scalar delta);
 
-    Level* CreateLevel(Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount);
+    Level* CreateLevel(bool horizontalLoop, Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount);
 
     std::vector<Level*>& GetLevels() { return m_levels; }
     std::vector<Level*> const& GetLevels() const { return m_levels; }
 
-    void ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB,  Meter relativeLongitudeA, Meter relativeLongitudeB, Meter section);
+    void ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Mm relativeAltitudeA, Mm relativeAltitudeB,  Mm relativeLongitudeA, Mm relativeLongitudeB, Mm section);
 
     bool IsPaused();
     void SetPause(bool pause);

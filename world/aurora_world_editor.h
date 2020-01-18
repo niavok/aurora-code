@@ -50,8 +50,9 @@ public:
 
     virtual ~WorldEditor();
 
-    void GenerateTestWord();
-    void GenerateHelloWord();
+    void GenerateTestWorld1();
+    void GenerateTestWorld2();
+    void GenerateTestWorld3();
 
 private:
     AuroraWorld& m_world;

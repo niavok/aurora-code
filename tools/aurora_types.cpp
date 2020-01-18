@@ -3,8 +3,12 @@
 
 namespace aurora {
 
-Volume MnSquareToVolume(Mm size) {
+Volume MmSquareToVolume(Mm size) {
     return Volume(size) * Volume(size) * 1e-6;
+}
+
+Meter MmToMeter(Mm length) {
+    return length * 1e-3;
 }
 
 Mm2::Mm2(Mm iX, Mm iY)

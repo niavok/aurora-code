@@ -74,7 +74,7 @@ bool operator ==(const MaterialComposition &a, const MaterialComposition &b);
 
 class TileContent {
 public:
-    TileContent(Volume volume);
+    TileContent(Volume volume, Mm altitude);
 
     ~TileContent();
 
@@ -214,9 +214,9 @@ public:
 	 */
     void SetContent(TileContent const& content);
 
-    Mm2 GetPosition() const { return m_position; }
+    Mm2 GetPositionMm() const { return m_position; }
 
-    Mm GetSize() const { return m_size; }
+    Mm GetSizeMm() const { return m_size; }
 
     std::vector<Tile*> const& GetChildren() const { return m_children; }
 
@@ -236,6 +236,7 @@ private:
 
     Mm m_size;
     Mm2 m_position; // Optionnal ?
+    Mm m_altitude;
     std::vector<Tile*> m_children;
     TileContent* m_content;
 

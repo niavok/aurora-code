@@ -13,7 +13,7 @@
 
 namespace aurora {
 
-static Scalar MnToGodot = 1.; // Mn in micrometer, Godot in Mm
+static Scalar MmToGodot = 1.; // Mn in micrometer, Godot in Mm
 
 AuroraWorldRenderer::AuroraWorldRenderer()
 	: m_targetWorld(nullptr)
@@ -209,7 +209,7 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 	else
 	{
 		GasNode const& gas = tile->GetContent()->GetGazNode();
-		Vector2 tilePosition = tile->GetPosition().ToVector2() * MnToGodot;
+		Vector2 tilePosition = tile->GetPositionMm().ToVector2() * MmToGodot;
 
 		// Draw flow
 		for(TransitionLink const & transitionLink : gas.GetTransitionLinks())
@@ -268,7 +268,7 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 			//real_t length = link->inputKineticEnergy * 0.1;
 			real_t length = link->outputKineticEnergy * 0.1;
 
-			draw_line(tilePosition + relativeBase + offsetPosition, tilePosition + relativeBase + offsetPosition + offsetDirection * length, transitionColor, 1.f);
+			//draw_line(tilePosition + relativeBase + offsetPosition, tilePosition + relativeBase + offsetPosition + offsetDirection * length, transitionColor, 1.f);
 		}
 	}
 }
@@ -301,8 +301,8 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 			texture = *m_testTexture2;
 		}
 
-        Vector2 pos = tile->GetPosition().ToVector2() * MnToGodot;
-        real_t size = tile->GetSize() * MnToGodot;
+        Vector2 pos = tile->GetPositionMm().ToVector2() * MmToGodot;
+        real_t size = tile->GetSizeMm() * MmToGodot;
 
         //texture->draw_rect(ci, Rect2(pos, Vector2(size, size)));
 
@@ -317,7 +317,7 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
             Scalar temperature = gas.GetTemperature();
 
             //gas.ComputeNPT(N, pressure, temperature);
-            Scalar bottomPressure = tilePressure + gas.GetPressureGradient() * tile->GetSize();
+            Scalar bottomPressure = tilePressure + gas.GetPressureGradient() * tile->GetSizeMm();
 
             auto PressureToColor = [](Scalar pressure)
             {
@@ -359,10 +359,10 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             draw_polygon(points, colors);
 
-            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure * 1e-5), color);
-            m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
-			draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
-			draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
+            //m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure * 1e-5), color);
+            //m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
+			//draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
+			//draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
 			
 			/*draw_line(pos, pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
 			draw_line(pos, pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));
@@ -383,7 +383,7 @@ Rect2 AuroraWorldRenderer::_edit_get_rect() const
     if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_targetWorld != nullptr && m_targetWorld->GetLevels().size() > 0)
 	{
         Level* firstLevel = m_targetWorld->GetLevels()[0];
-        return Rect2(Vector2(0, 0) , firstLevel->GetSize().ToVector2() * MnToGodot);
+        return Rect2(Vector2(0, 0) , firstLevel->GetSizeMm().ToVector2() * MmToGodot);
 	}
 	return Rect2(0, 0, 0, 0);
 }

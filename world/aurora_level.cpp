@@ -8,10 +8,11 @@ int const Level::TileChildEdgeCount = 2; // 2 or modify 1<<maxTileSubdivision
 int const Level::TileChildCount = Level::TileChildEdgeCount * Level::TileChildEdgeCount;
 
 
-Level::Level(Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
+Level::Level(bool horizontalLoop, Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
     : m_minTileSize(minTileSize)
     , m_maxTileSize(minTileSize * (1<<maxTileSubdivision))
     , m_size(Mm2(rootTileHCount, rootTileVCount) * m_maxTileSize)
+    , m_horizontalLoop(horizontalLoop)
 
 {
     size_t worldRootTileCount = size_t(rootTileHCount *  rootTileVCount);

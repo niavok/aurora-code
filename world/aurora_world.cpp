@@ -13,7 +13,7 @@ AuroraWorld::AuroraWorld()
     //count = 0;
     printf("plop1\n");
     WorldEditor worldEditor(*this);
-    worldEditor.GenerateHelloWord();
+    worldEditor.GenerateTestWorld2();
 
     InitPhysics();
 }
@@ -60,9 +60,9 @@ void AuroraWorld::Update(Scalar delta)
 
 
 
-Level* AuroraWorld::CreateLevel(Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
+Level* AuroraWorld::CreateLevel(bool horizontalLoop, Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
 {
-    Level* level = new Level(minTileSize, maxTileSubdivision, rootTileHCount, rootTileVCount);
+    Level* level = new Level(horizontalLoop, minTileSize, maxTileSubdivision, rootTileHCount, rootTileVCount);
     m_levels.push_back(level);
 
     return level;
@@ -82,19 +82,19 @@ void AuroraWorld::InitPhysics()
             {
                 MmRect tileLeft;
 
-                tileLeft.position.y = tile->GetPosition().y;
-                if(tile->GetPosition().x == 0)
+                tileLeft.position.y = tile->GetPositionMm().y;
+                if(tile->GetPositionMm().x == 0 && level->IsHorizontalLoop())
                 {
                     // Make world circular
-                    tileLeft.position.x = level->GetSize().x - 1;
+                    tileLeft.position.x = level->GetSizeMm().x - 1;
                 }
                 else
                 {
-                    tileLeft.position.x = tile->GetPosition().x - 1;
+                    tileLeft.position.x = tile->GetPositionMm().x - 1;
                 }
 
                 tileLeft.size.x = 1;
-                tileLeft.size.y = tile->GetSize();
+                tileLeft.size.y = tile->GetSizeMm();
 
 
                 std::vector<Tile*> tilesToConnect;
@@ -103,21 +103,21 @@ void AuroraWorld::InitPhysics()
                 {
                     Meter relativeAltitudeB;
                     Meter relativeAltitudeA;
-                    if(tileToConnect->GetSize() < tile->GetSize())
+                    if(tileToConnect->GetSizeMm() < tile->GetSizeMm())
                     {
-                        relativeAltitudeB = tileToConnect->GetSize() / 2;
-                        relativeAltitudeA = tileToConnect->GetPosition().y - tile->GetPosition().y + relativeAltitudeB;
+                        relativeAltitudeB = tileToConnect->GetSizeMm() / 2;
+                        relativeAltitudeA = tileToConnect->GetPositionMm().y - tile->GetPositionMm().y + relativeAltitudeB;
                     }
                     else
                     {
-                        relativeAltitudeA = tile->GetSize() / 2;
-                        relativeAltitudeB = tile->GetPosition().y - tileToConnect->GetPosition().y + relativeAltitudeA;
+                        relativeAltitudeA = tile->GetSizeMm() / 2;
+                        relativeAltitudeB = tile->GetPositionMm().y - tileToConnect->GetPositionMm().y + relativeAltitudeA;
                     }
-                    
-                    Meter relativeLongitudeA = 0;
-                    Meter relativeLongitudeB = tileToConnect->GetSize();
 
-                    Meter section = MIN(tileToConnect->GetSize(), tile->GetSize());
+                    Meter relativeLongitudeA = 0;
+                    Meter relativeLongitudeB = tileToConnect->GetSizeMm();
+
+                    Meter section = MIN(tileToConnect->GetSizeMm(), tile->GetSizeMm());
                     ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_LEFT), relativeAltitudeA, relativeAltitudeB, relativeLongitudeA, relativeLongitudeB, section);
                 }
             }
@@ -126,31 +126,31 @@ void AuroraWorld::InitPhysics()
 
             {
                 MmRect tileBottom;
-                tileBottom.position.x = tile->GetPosition().x;
-                tileBottom.position.y = tile->GetPosition().y + tile->GetSize();
-                tileBottom.size.x = tile->GetSize();
+                tileBottom.position.x = tile->GetPositionMm().x;
+                tileBottom.position.y = tile->GetPositionMm().y + tile->GetSizeMm();
+                tileBottom.size.x = tile->GetSizeMm();
                 tileBottom.size.y = 1;
 
                 std::vector<Tile*> tilesToConnect;
                 level->FindTileAt(tilesToConnect, tileBottom);
                 for(Tile* tileToConnect : tilesToConnect)
                 {
-                    Meter section = MIN(tileToConnect->GetSize(), tile->GetSize());
-                    
-                    Meter relativeAltitudeA = tile->GetSize();
+                    Meter section = MIN(tileToConnect->GetSizeMm(), tile->GetSizeMm());
+
+                    Meter relativeAltitudeA = tile->GetSizeMm();
                     Meter relativeAltitudeB = 0;
                     Meter relativeLongitudeA;
                     Meter relativeLongitudeB;
 
-                    if(tileToConnect->GetSize() < tile->GetSize())
+                    if(tileToConnect->GetSizeMm() < tile->GetSizeMm())
                     {
-                        relativeLongitudeB = tileToConnect->GetSize() / 2;
-                        relativeLongitudeA = tileToConnect->GetPosition().x - tile->GetPosition().x + relativeLongitudeB;
+                        relativeLongitudeB = tileToConnect->GetSizeMm() / 2;
+                        relativeLongitudeA = tileToConnect->GetPositionMm().x - tile->GetPositionMm().x + relativeLongitudeB;
                     }
                     else
                     {
-                        relativeLongitudeA = tile->GetSize() / 2;
-                        relativeLongitudeB = tile->GetPosition().x - tileToConnect->GetPosition().x + relativeLongitudeA;
+                        relativeLongitudeA = tile->GetSizeMm() / 2;
+                        relativeLongitudeB = tile->GetPositionMm().x - tileToConnect->GetPositionMm().x + relativeLongitudeA;
                     }
 
 
@@ -164,7 +164,7 @@ void AuroraWorld::InitPhysics()
     m_physicEngine.CheckDuplicates();
 }
 
-void AuroraWorld::ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB, Meter relativeLongitudeA, Meter relativeLongitudeB, Meter section)
+void AuroraWorld::ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Mm relativeAltitudeA, Mm relativeAltitudeB, Mm relativeLongitudeA, Mm relativeLongitudeB, Mm section)
 {
     GasGasTransition::Config config(tileA->GetContent()->GetGazNode(), tileB->GetContent()->GetGazNode());
     config.relativeAltitudeA = relativeAltitudeA;
