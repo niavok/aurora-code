@@ -16,6 +16,8 @@ public:
     void SetVolume(Volume volume);
 
     Quantity GetN(Gas gas) const;
+    Quantity GetInputN(Gas gas) const;
+    Quantity GetOutputN(Gas gas) const;
     Energy GetThermalEnergy() const;
 
     void AddN(Gas gas, Quantity N);
@@ -23,18 +25,22 @@ public:
 
 
 
-    void TakeN(Gas gas, Quantity N);
-    void TakeThermalEnergy(Energy thermalEnergy);
+    //void TakeN(Gas gas, Quantity N);
+    //void TakeThermalEnergy(Energy thermalEnergy);
 
     Scalar GetPressure() const;
     Scalar GetTemperature() const;
     Quantity GetN() const;
     Quantity GetMovingN() const;
     Scalar GetPressureGradient() const;
+    Quantity GetOutputN() const;
+    Quantity GetInputN() const;
 
 
     Energy GetEnergy() const;
-    Energy GetCheckEnergy() const { return m_thermalEnergy; }
+    Energy GetOutputEnergy() const;
+    Energy GetInputEnergy() const;
+    Energy GetCheckEnergy() const { return m_inputThermalEnergy + m_outputThermalEnergy; }
     Quantity GetCheckN() const { return m_cacheCheckN; }
 
     Mm GetAltitudeMm() const { return m_altitude; }
@@ -53,6 +59,7 @@ public:
 private:
 
     void MigrateKineticEnergy();
+    void FlushInput();
 
     // Constants
     Mm m_altitude;
@@ -61,13 +68,18 @@ private:
 
     // Variables
     //Quantity m_N; // TODO cache ?
-    GasComposition m_nComposition;
-    Energy m_thermalEnergy;
+
+    GasComposition m_inputNComposition;
+    GasComposition m_outputNComposition;
+    Energy m_inputThermalEnergy;
+    Energy m_outputThermalEnergy;
     Quantity m_movingN;
 
     // Cache
     bool m_cacheComputed;
     Quantity m_cacheN;
+    Quantity m_cacheInputN;
+    Quantity m_cacheOutputN;
     Quantity m_cacheCheckN;
     Scalar m_cacheMass;
     Scalar m_cachePressure;

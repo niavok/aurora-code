@@ -18,8 +18,8 @@ WorldEditor::~WorldEditor()
 
 void WorldEditor::GenerateTestWorld1()
 {
-    int blockCountX = 10;
-    Level* surfaceLevel = m_world.CreateLevel(false, 50, 0, blockCountX, 1); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    int blockCountX = 6;
+    Level* surfaceLevel = m_world.CreateLevel(true, 50, 0, blockCountX, 1); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
     int surfaceWidth = surfaceLevel->GetSizeMm().x;
     int surfaceHeight = surfaceLevel->GetSizeMm().y;
 
@@ -37,7 +37,7 @@ void WorldEditor::GenerateTestWorld1()
 
     TileComposition highPressureDryAir = dryAir;
     highPressureDryAir.Gas.pressure = 100000 * 10.;
-    highPressureDryAir.Gas.temperature = 274.;
+    highPressureDryAir.Gas.temperature = 274. + 500;
     PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(0, 0, surfaceWidth/ blockCountX, surfaceHeight));
 }
 
@@ -45,7 +45,7 @@ void WorldEditor::GenerateTestWorld2()
 {
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
-    Level* surfaceLevel = m_world.CreateLevel(true, 50, 0, 80, 80); // 20 x 20 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Level* surfaceLevel = m_world.CreateLevel(false, 50, 0, 80, 80); // 20 x 20 blocks * 50 mm * 2^ 1 = 1 m x 1 m
 
 
     TileComposition dryAir;

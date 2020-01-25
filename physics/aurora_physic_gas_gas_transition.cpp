@@ -173,29 +173,70 @@ void GasGasTransition::Step(Scalar delta)
 
         Scalar pressureDeltaN = kineticEnergy / (PhysicalConstants::kineticCoef * sourceNode.GetTemperature());
 
+
         Quantity sourceTotalN = sourceNode.GetN();
-        Quantity transfertN = std::min(sourceTotalN, Quantity(pressureDeltaN));
+        Quantity sourceTotalUsableN = sourceTotalN / sourceNode.GetTransitionLinks().size();
 
 
-        if(transfertN > 0)
+        Quantity totalTransfertN = std::min(sourceTotalUsableN, Quantity(pressureDeltaN));
+
+
+        if(totalTransfertN > 0)
         {
-            for(Gas gas : AllGas())
+            auto TakeComposition = [&](bool useOutput, Quantity transfertN, Quantity totalN)
             {
-                // No diffusion
-                Scalar compositionRatio = Scalar(sourceNode.GetN(gas)) / Scalar(sourceTotalN);
-                Quantity quantity = Quantity(transfertN * compositionRatio);
-                m_links[sourceIndex].outputMaterial[gas] -= quantity;
-                m_links[destinationIndex].outputMaterial[gas] += quantity;
+                for(Gas gas : AllGas())
+                {
+                    Quantity gasN;
+                    if(useOutput)
+                    {
+                        gasN = sourceNode.GetOutputN(gas);
+                    }
+                    else
+                    {
+                        gasN = sourceNode.GetInputN(gas);
+                    }
 
-                Scalar mass = quantity * PhysicalConstants::GetMassByN(gas);
-                deltaMass += mass;
+                    // No diffusion
+                    Scalar compositionRatio = Scalar(gasN) / Scalar(totalN);
+                    Quantity quantity = Quantity(transfertN * compositionRatio);
+                    m_links[sourceIndex].outputMaterial[gas] -= quantity;
+                    m_links[destinationIndex].outputMaterial[gas] += quantity;
+
+                    Scalar mass = quantity * PhysicalConstants::GetMassByN(gas);
+                    deltaMass += mass;
+                }
+
+                Energy energy;
+                if(useOutput)
+                {
+                    energy = sourceNode.GetOutputEnergy();
+                }
+                else
+                {
+                    energy = sourceNode.GetInputEnergy();
+                }
+
+                // Take energy ratio
+                Scalar takenRatio = Scalar(transfertN) / totalN;
+                Energy takenEnergy = Energy(takenRatio * energy);
+                m_links[sourceIndex].outputThermalEnergy -= takenEnergy;
+                m_links[destinationIndex].outputThermalEnergy += takenEnergy;
+            };
+
+            Quantity sourceTotalOutputN = sourceNode.GetOutputN();
+            Quantity outputTransfertN = std::min(totalTransfertN, sourceTotalOutputN);
+
+            if(outputTransfertN)
+            {
+                TakeComposition(true, outputTransfertN, sourceTotalOutputN);
             }
 
-            // Take energy ratio
-            Scalar takenRatio = Scalar(transfertN) / sourceTotalN;
-            Energy takenEnergy = Energy(takenRatio * sourceNode.GetEnergy());
-            m_links[sourceIndex].outputThermalEnergy -= takenEnergy;
-            m_links[destinationIndex].outputThermalEnergy += takenEnergy;
+            if(outputTransfertN < totalTransfertN)
+            {
+                Quantity inputTransfertN = totalTransfertN - outputTransfertN;
+                TakeComposition(false, inputTransfertN, sourceNode.GetInputN());
+            }
         }
     }
 
