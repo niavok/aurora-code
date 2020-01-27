@@ -16,7 +16,7 @@ struct int2
 	int y;
 };
 
-typedef int64_t Energy;
+typedef Scalar Energy;
 typedef int64_t Quantity;
 
 typedef int32_t Mm; // Mm

@@ -194,6 +194,36 @@ void GasNode::MigrateKineticEnergy()
     }*/
 
 
+#if 1
+    // Transform opposite direction as heat
+    Energy divertedEnergy = 0;
+    for(int i = 0; i < 2; i++)
+    {
+        Energy energyDiff = energyByDirection[i] - energyByDirection[i+2];
+
+        divertedEnergy += energyByDirection[i] + energyByDirection[i+2] - std::abs(energyDiff);
+        if(energyDiff > 0)
+        {
+            energyByDirection[i] = energyDiff;
+            energyByDirection[i + 2] = 0;
+        }
+        else if(energyDiff < 0)
+        {
+            energyByDirection[i] = 0;
+            energyByDirection[i + 2] = -energyDiff;
+        }
+        else
+        {
+            energyByDirection[i] = 0;
+            energyByDirection[i + 2] = 0;
+        }
+    }
+
+    m_inputThermalEnergy += divertedEnergy;
+    assert(!isnan(m_inputThermalEnergy));
+
+#endif
+
     // Transform opposite direction as heat or reflect in opposite directions
 
     /*const float DiversionRatio = 1.0; // TODO remove if 0
@@ -316,6 +346,7 @@ void GasNode::MigrateKineticEnergy()
         if(energyByDirection[i] > 0)
         {
             m_inputThermalEnergy += TakeEnergy(Transition::Direction(i) , 1.0f);
+            assert(!isnan(m_inputThermalEnergy));
         }
     }
 
@@ -346,6 +377,7 @@ void GasNode::ApplyTransitions()
         if(link->outputThermalEnergy > 0)
         {
             m_inputThermalEnergy += link->outputThermalEnergy;
+            assert(!isnan(m_inputThermalEnergy));
         }
         else
         {
@@ -404,6 +436,9 @@ void GasNode::ComputeCache()
     Energy energyPerK = 0;
     Quantity totalInputN = 0;
     Quantity totalOutputN = 0;
+
+    assert(!isnan(m_inputThermalEnergy));
+    assert(!isnan(m_outputThermalEnergy));
 
      for(Gas gas : AllGas())
     {

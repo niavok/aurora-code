@@ -106,6 +106,7 @@ void GasGasTransition::Step(Scalar delta)
 
 
     float diffusionRatio = 0;
+    // TODO
 
     Scalar deltaMass = 0;
 
@@ -147,6 +148,12 @@ void GasGasTransition::Step(Scalar delta)
     }
 
 
+    // Optimal deltaN
+
+    //PVNRT1 - 
+
+
+
     // Apply pressure acceleration
     Scalar pressureDiff = pressureA - pressureB;
     Scalar kineticAcceleration = pressureDiff * m_section * viscosity * PhysicalConstants::kineticCoef;
@@ -172,6 +179,7 @@ void GasGasTransition::Step(Scalar delta)
         GasNode& sourceNode = *((GasNode*) m_links[sourceIndex].node);
 
         Scalar pressureDeltaN = kineticEnergy / (PhysicalConstants::kineticCoef * sourceNode.GetTemperature());
+
 
 
         Quantity sourceTotalN = sourceNode.GetN();
@@ -238,6 +246,12 @@ void GasGasTransition::Step(Scalar delta)
                 TakeComposition(false, inputTransfertN, sourceNode.GetInputN());
             }
         }
+        else
+        {
+            // No composition movement, disperse thermal energy
+            newKineticEnergyDelta = 0;
+        }
+        
     }
 
 
@@ -275,7 +289,7 @@ void GasGasTransition::Step(Scalar delta)
 #endif
 
     assert(m_links[sourceIndex].outputKineticEnergy == 0);
-    
+
     /*// Apply pressure acceleration
     Scalar pressureDiff = pressureA - pressureB;
     Scalar kineticAcceleration = pressureDiff * m_section * viscosity * KineticCoef;
@@ -337,7 +351,7 @@ void GasGasTransition::Step(Scalar delta)
         assert(m_links[i].inputKineticEnergy == 0);
     }
 
-    assert(initialCheckEnergy == finalCheckEnergy);
+    assert(std::abs(initialCheckEnergy - finalCheckEnergy) < 1e-8);
 }
 
 }

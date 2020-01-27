@@ -223,7 +223,7 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 			GasGasTransition const* transition = reinterpret_cast<GasGasTransition*>(transitionLink.transition);
 
 			Transition::NodeLink const* link = transition->GetNodeLink(transitionLink.index);
-			if(link->outputKineticEnergy == 0)
+			if(link->outputKineticEnergy == 0 && link->inputKineticEnergy == 0)
 			{
 				continue;
 			}
@@ -238,25 +238,27 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 			Vector2 offsetPosition(0,0);
 			Color transitionColor(0, 0, 0);
 
+			real_t margin_offset = tile->GetSizeMm() * MmToGodot / 6;
+
 			switch (direction)
 			{
 			case Transition::Direction::DIRECTION_DOWN:
-				offsetPosition = Vector2(0, 0);
+				offsetPosition = Vector2(-margin_offset, 0);
 				offsetDirection = Vector2(0, -1);
 				transitionColor = Color(1, 0, 0);
 				break;
 			case Transition::Direction::DIRECTION_UP:
-				offsetPosition = Vector2(1, 0);
+				offsetPosition = Vector2(margin_offset, 0);
 				offsetDirection = Vector2(0, 1);
 				transitionColor = Color(0, 1, 0);
 				break;
 			case Transition::Direction::DIRECTION_LEFT:
-				offsetPosition = Vector2(0, 0);
+				offsetPosition = Vector2(0, -margin_offset);
 				offsetDirection = Vector2(1, 0);
 				transitionColor = Color(0, 0, 1);
 				break;
 			case Transition::Direction::DIRECTION_RIGHT:
-				offsetPosition = Vector2(0, 1);
+				offsetPosition = Vector2(0, margin_offset);
 				offsetDirection = Vector2(-1, 0);
 				transitionColor = Color(1, 1, 0);
 				break;
@@ -265,10 +267,18 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 				break;
 			}
 
-			//real_t length = link->inputKineticEnergy * 0.1;
-			real_t length = sqrt(link->outputKineticEnergy) * 1;
+			real_t length = (link->outputKineticEnergy + link->inputKineticEnergy) * 0.1;
+			real_t width = 1.f;
+			real_t maxLength = tile->GetSizeMm() * MmToGodot * 0.9;
+			if(length > maxLength)
+			{
+				width = length / maxLength;
+				length = maxLength;
+			}
 
-			draw_line(tilePosition + relativeBase + offsetPosition, tilePosition + relativeBase + offsetPosition + offsetDirection * length, transitionColor, 1.f);
+			//real_t length = sqrt(link->outputKineticEnergy) * 1;
+
+			//draw_line(tilePosition + relativeBase + offsetPosition, tilePosition + relativeBase + offsetPosition + offsetDirection * length, transitionColor, width);
 		}
 	}
 }
@@ -359,10 +369,10 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             draw_polygon(points, colors);
 
-            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure * 1e-5), color);
-            m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
-			draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
-			draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
+            //m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure * 1e-5), color);
+            //m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
+			//draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
+			//draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
 			
 			/*draw_line(pos, pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
 			draw_line(pos, pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));

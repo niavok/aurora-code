@@ -9,6 +9,7 @@
 namespace aurora {
 
 PhysicEngine::PhysicEngine()
+    : m_stepState(TRANSITION_APPLIED)
 {
     PhysicalConstants::Init();
 }
@@ -52,50 +53,7 @@ char * sprintf_int128( __int128_t n ) {
 
 void PhysicEngine::Step(Scalar delta)
 {
-    static int stepCount = 0;
-    printf("PhysicEngine::Step %d\n", stepCount);
-    stepCount++;
-
-
-    auto ComputeEnergy = [this](char* label)
-    {
-        __int128 energy = 0;
-        for(FluidNode* node : m_nodes)
-        {
-            energy += node->GetCheckEnergy();
-            if(node->GetCheckEnergy() < 0)
-            {
-                 printf("Node %p e=%lld (%s)\n", node, node->GetCheckEnergy(), sprintf_int128(energy));
-            }
-        }
-
-        for(Transition* transition : m_transitions)
-        {
-            for(size_t i = 0; i < transition->GetNodeLinkCount(); i++)
-            {
-                assert(transition->GetNodeLink(i)->inputKineticEnergy >= 0);
-
-                energy += transition->GetNodeLink(i)->inputKineticEnergy;
-                energy += transition->GetNodeLink(i)->outputThermalEnergy;
-                energy += transition->GetNodeLink(i)->outputKineticEnergy;
-
-                if(energy < 0)
-            {
-                 printf("Transition inputKineticEnergy=%lld outputThermalEnergy=%lld outputKineticEnergy=%lld (%s)\n",
-                  transition->GetNodeLink(i)->inputKineticEnergy,
-                  transition->GetNodeLink(i)->outputThermalEnergy,
-                   transition->GetNodeLink(i)->outputKineticEnergy, sprintf_int128(energy));
-            }
-            }
-        }
-
-        //printf("ComputeEnergy %s %s\n", label, sprintf_int128(energy));
-
-        return energy;
-    };
-
-    // Check
-    __int128 initialTotalEnergy = ComputeEnergy("initial");
+     Scalar initialTotalEnergy = ComputeEnergy("initial");
     __int128 initialTotalN = 0;
     for(FluidNode* node : m_nodes)
     {
@@ -103,14 +61,110 @@ void PhysicEngine::Step(Scalar delta)
         initialTotalN += node->GetCheckN();
     }
 
-    /*for(Transition* transition : m_transitions)
+    if(m_stepState !=  TRANSITION_APPLIED)
+    {
+        SubStep(delta);
+    }
+    else
+    {
+        PrepareTransitions();
+        ComputeTransitions(delta);
+        ApplyTransitions();
+    }
+
+     __int128 finalTotalN = 0;
+    for(FluidNode* node : m_nodes)
+    {
+        finalTotalN += node->GetCheckN();
+    }
+
+    Scalar check = ComputeEnergy("after all step");
+    assert((initialTotalEnergy - check) < 1e-2);
+    assert(initialTotalN == finalTotalN);
+}
+
+void PhysicEngine::SubStep(Scalar delta)
+{
+    Scalar initialTotalEnergy = ComputeEnergy("initial");
+    __int128 initialTotalN = 0;
+    for(FluidNode* node : m_nodes)
+    {
+       // initialTotalEnergy += node->GetCheckEnergy();
+        initialTotalN += node->GetCheckN();
+    }
+
+
+    switch (m_stepState)
+    {
+    case TRANSITION_APPLIED:
+        PrepareTransitions();
+        m_stepState = TRANSITION_PREPARED;
+        break;
+    case TRANSITION_PREPARED:
+        ComputeTransitions(delta);
+        m_stepState = TRANSITION_COMPUTED;
+    break;
+    case TRANSITION_COMPUTED:
+        ApplyTransitions();
+        m_stepState = TRANSITION_APPLIED;
+    break;
+    default:
+        break;
+    }
+
+     __int128 finalTotalN = 0;
+    for(FluidNode* node : m_nodes)
+    {
+        finalTotalN += node->GetCheckN();
+    }
+
+    
+
+    Scalar check = ComputeEnergy("after all step");
+    assert((initialTotalEnergy - check) < 1e-8);
+    assert(initialTotalN == finalTotalN);
+
+}
+
+Energy PhysicEngine::ComputeEnergy(const char* label)
+{
+    Energy energy = 0;
+    for(FluidNode* node : m_nodes)
+    {
+        energy += node->GetCheckEnergy();
+        if(node->GetCheckEnergy() < 0)
+        {
+                printf("Node %p e=%g (%s)\n", node, node->GetCheckEnergy(), sprintf_int128(energy));
+        }
+    }
+
+    for(Transition* transition : m_transitions)
     {
         for(size_t i = 0; i < transition->GetNodeLinkCount(); i++)
         {
             assert(transition->GetNodeLink(i)->inputKineticEnergy >= 0);
-        }
-    }*/
 
+            energy += transition->GetNodeLink(i)->inputKineticEnergy;
+            energy += transition->GetNodeLink(i)->outputThermalEnergy;
+            energy += transition->GetNodeLink(i)->outputKineticEnergy;
+
+            if(energy < 0)
+        {
+                printf("Transition inputKineticEnergy=%g outputThermalEnergy=%g outputKineticEnergy=%g (%s)\n",
+                transition->GetNodeLink(i)->inputKineticEnergy,
+                transition->GetNodeLink(i)->outputThermalEnergy,
+                transition->GetNodeLink(i)->outputKineticEnergy, sprintf_int128(energy));
+        }
+        }
+    }
+
+    //printf("ComputeEnergy %s %s\n", label, sprintf_int128(energy));
+
+    return energy;
+}
+
+void PhysicEngine::PrepareTransitions()
+{
     for(FluidNode* node : m_nodes)
     {
         node->PrepareTransitions();
@@ -120,14 +174,13 @@ void PhysicEngine::Step(Scalar delta)
         //__int128 check = ComputeEnergy("after prepare");
         //assert(initialTotalEnergy == check);
     }
+}
 
-    /*for(Transition* transition : m_transitions)
-    {
-        for(size_t i = 0; i < transition->GetNodeLinkCount(); i++)
-        {
-            assert(transition->GetNodeLink(i)->inputKineticEnergy >= 0);
-        }
-    }*/
+void PhysicEngine::ComputeTransitions(Scalar delta)
+{
+    static int stepCount = 0;
+    printf("PhysicEngine::Step %d\n", stepCount);
+    stepCount++;
 
     for(Transition* transition : m_transitions)
     {
@@ -141,22 +194,11 @@ void PhysicEngine::Step(Scalar delta)
         //printf("%s -> %s\n", sprintf_int128(initialTotalEnergy), sprintf_int128(check));
         //assert(initialTotalEnergy == check);
     }
+}
 
-    __int128 finalTotalEnergy = 0;
-    __int128 finalTotalEnergyP1 = 0;
-    __int128 finalTotalEnergyP2 = 0;
-    __int128 finalTotalEnergyP3 = 0;
 
-    __int128 finalTotalN = 0;
-    for(FluidNode* node : m_nodes)
-    {
-        finalTotalN += node->GetCheckN();
-    }
-
-    __int128 check = ComputeEnergy("after all step");
-// TODO REPAIR
-    assert(initialTotalEnergy == check);
-    assert(initialTotalN == finalTotalN);
+void PhysicEngine::ApplyTransitions()
+{
 
     for(FluidNode* node : m_nodes)
     {

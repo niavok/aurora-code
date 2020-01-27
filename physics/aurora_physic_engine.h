@@ -34,6 +34,7 @@ public:
     ~PhysicEngine();
 
     void Step(Scalar delta);
+    void SubStep(Scalar delta);
 
     void Flush(); // Delete transition but not nodes
 
@@ -47,6 +48,22 @@ private:
 
     std::vector<Transition*> m_transitions;
     std::vector<FluidNode*> m_nodes;
+
+    void PrepareTransitions();
+    void ComputeTransitions(Scalar delta);
+    void ApplyTransitions();
+
+    Energy ComputeEnergy(const char* label);
+
+    enum StepState
+    {
+        TRANSITION_PREPARED,
+        TRANSITION_COMPUTED,
+        TRANSITION_APPLIED
+    };
+
+    StepState m_stepState;
+
 };
 
 
