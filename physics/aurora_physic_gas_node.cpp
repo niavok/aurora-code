@@ -60,7 +60,7 @@ void GasNode::AddN(Gas gas, Quantity N)
 
 void GasNode::AddThermalEnergy(Energy thermalEnergy)
 {
-    m_outputThermalEnergy += thermalEnergy;
+    m_inputThermalEnergy += thermalEnergy;
     m_cacheComputed = false;
 }
 /*
@@ -79,13 +79,13 @@ void GasNode::TakeN(Gas gas, Quantity N)
     m_nComposition[gas] -= N;
     m_cacheComputed = false;
 }
-
+*/
 void GasNode::TakeThermalEnergy(Energy thermalEnergy)
 {
-    m_thermalEnergy -= thermalEnergy;
+    m_outputThermalEnergy -= thermalEnergy;
     m_cacheComputed = false;
 }
-*/
+
 Quantity GasNode::GetN(Gas gas) const
 {
     return m_inputNComposition[gas] + m_outputNComposition[gas];

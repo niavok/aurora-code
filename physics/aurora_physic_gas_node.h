@@ -26,7 +26,7 @@ public:
 
 
     //void TakeN(Gas gas, Quantity N);
-    //void TakeThermalEnergy(Energy thermalEnergy);
+    void TakeThermalEnergy(Energy thermalEnergy);
 
     Scalar GetPressure() const;
     Scalar GetTemperature() const;

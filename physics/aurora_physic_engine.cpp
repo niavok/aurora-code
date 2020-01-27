@@ -81,6 +81,35 @@ void PhysicEngine::Step(Scalar delta)
     Scalar check = ComputeEnergy("after all step");
     assert((initialTotalEnergy - check) < 1e-2);
     assert(initialTotalN == finalTotalN);
+
+
+#if 1
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            GasNode* node =(GasNode*) m_nodes[80*(40+i)+70];
+            //node->AddThermalEnergy(10000 * node->GetN());
+            node->AddThermalEnergy(2.0 * node->GetN());
+            node->ComputeCache();
+            //printf("N=%ld\n",node->GetN());
+        }
+    }
+#endif
+
+#if 1
+    {
+        for(int i = 0; i < 80; i++)
+        {
+            GasNode* node =(GasNode*) m_nodes[i * 80];
+            //node->AddThermalEnergy(10000 * node->GetN());
+
+            //node->AddThermalEnergy(-0.1 * node->GetN());
+            node->TakeThermalEnergy(0.0002 * node->GetThermalEnergy());
+            node->ComputeCache();
+            //printf("N=%ld\n",node->GetN());
+        }
+    }
+#endif
 }
 
 void PhysicEngine::SubStep(Scalar delta)
@@ -212,29 +241,6 @@ void PhysicEngine::ApplyTransitions()
         node->ApplyTransitions();
         node->ComputeCache();
     }
-
-
-#if 0
-    {
-        GasNode* node =(GasNode*) m_nodes[597];
-        //node->AddThermalEnergy(10000 * node->GetN());
-        node->AddThermalEnergy(0.1 * node->GetN());
-        node->ComputeCache();
-        printf("N=%ld\n",node->GetN());
-    }
-#endif
-
-#if 0
-    {
-        GasNode* node =(GasNode*) m_nodes[123];
-        //node->AddThermalEnergy(10000 * node->GetN());
-
-        //node->AddThermalEnergy(-0.1 * node->GetN());
-        node->TakeThermalEnergy(0.1 * node->GetThermalEnergy());
-        node->ComputeCache();
-        printf("N=%ld\n",node->GetN());
-    }
-#endif
 }
 
 void PhysicEngine::CheckDuplicates()

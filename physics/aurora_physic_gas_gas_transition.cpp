@@ -147,13 +147,6 @@ void GasGasTransition::Step(Scalar delta)
         }
     }
 
-
-    // Optimal deltaN
-
-    //PVNRT1 - 
-
-
-
     // Apply pressure acceleration
     Scalar pressureDiff = pressureA - pressureB;
     Scalar kineticAcceleration = pressureDiff * m_section * viscosity * PhysicalConstants::kineticCoef;
@@ -256,7 +249,7 @@ void GasGasTransition::Step(Scalar delta)
 
 
     // Absorb or add kinetic energy from altitude change
-#if 0
+#if 1
     if(deltaAltitude != 0)
     {
         Energy deltaPotentialEnergy = -deltaAltitude * deltaMass * PhysicalConstants::gravity * PhysicalConstants::energyPerJoule;
