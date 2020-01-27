@@ -89,7 +89,7 @@ void PhysicEngine::Step(Scalar delta)
         {
             GasNode* node =(GasNode*) m_nodes[80*(40+i)+70];
             //node->AddThermalEnergy(10000 * node->GetN());
-            node->AddThermalEnergy(2.0 * node->GetN());
+            node->AddThermalEnergy(0.002 * node->GetN());
             node->ComputeCache();
             //printf("N=%ld\n",node->GetN());
         }

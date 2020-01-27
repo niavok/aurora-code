@@ -9,12 +9,12 @@ class PhysicalConstants
 {
 public:
     static constexpr Scalar molePerN = 1.2e-6; // mol.N-1
-    static constexpr Scalar energyPerJoule = 1000; // joule.E-1
+    //static constexpr Scalar energyPerJoule = 1000; // joule.E-1
 
     static constexpr Scalar gravity = 9.81*5; // m.s-2, Acceleration of the gravity
     static constexpr Scalar gasConstantMole = 8.31446261815325; // Gas contant for mol J.mol-1.K-1
     static constexpr Scalar gasConstantN = molePerN * gasConstantMole; // Pressure . volume . K-1, from PV = NRT
-    static constexpr Scalar kineticCoef = 0.001; // acceleration ratio of a fluid due to pressure difference
+    static constexpr Scalar kineticCoef = 0.000001; // acceleration ratio of a fluid due to pressure difference
 
     static void Init();
 

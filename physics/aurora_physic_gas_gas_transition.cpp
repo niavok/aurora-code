@@ -244,7 +244,6 @@ void GasGasTransition::Step(Scalar delta)
             // No composition movement, disperse thermal energy
             newKineticEnergyDelta = 0;
         }
-        
     }
 
 
@@ -252,7 +251,7 @@ void GasGasTransition::Step(Scalar delta)
 #if 1
     if(deltaAltitude != 0)
     {
-        Energy deltaPotentialEnergy = -deltaAltitude * deltaMass * PhysicalConstants::gravity * PhysicalConstants::energyPerJoule;
+        Energy deltaPotentialEnergy = -deltaAltitude * deltaMass * PhysicalConstants::gravity;
 
         if(deltaPotentialEnergy != 0)
         {
