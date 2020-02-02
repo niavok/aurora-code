@@ -97,18 +97,21 @@ void GasGasTransition::Step(Scalar delta)
 
     Meter deltaAltitude = MmToMeter(B.GetAltitudeMm() - A.GetAltitudeMm());
 
-    Scalar viscosity = 0.1;
+    //Scalar viscosity = 0.1;
+    Scalar viscosity = 1.2e-7;
 
     //Scalar pressureADeltaN = pressureA * m_section * viscosity;
     //Scalar pressureBDeltaN = pressureB * m_section * viscosity;
 
     //Quantity transfertN = MAX(0, abs(finalDeltaN));
 
+    Scalar deltaMass = 0;
 
+#if 0
     float diffusionRatio = 0;
     // TODO
 
-    Scalar deltaMass = 0;
+    
 
     for(int sourceIndex = 0; sourceIndex < LinkCount; sourceIndex++)
     {
@@ -146,6 +149,7 @@ void GasGasTransition::Step(Scalar delta)
             m_links[destinationIndex].outputThermalEnergy += takenEnergy;
         }
     }
+#endif
 
     // Apply pressure acceleration
     Scalar pressureDiff = pressureA - pressureB;

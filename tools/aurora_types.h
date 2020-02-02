@@ -17,7 +17,7 @@ struct int2
 };
 
 typedef Scalar Energy;
-typedef int64_t Quantity;
+typedef Scalar Quantity;
 
 typedef int32_t Mm; // Mm
 typedef Scalar Volume; // m2

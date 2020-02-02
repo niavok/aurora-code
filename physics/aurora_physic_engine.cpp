@@ -54,7 +54,7 @@ char * sprintf_int128( __int128_t n ) {
 void PhysicEngine::Step(Scalar delta)
 {
      Scalar initialTotalEnergy = ComputeEnergy("initial");
-    __int128 initialTotalN = 0;
+    Quantity initialTotalN = 0;
     for(FluidNode* node : m_nodes)
     {
        // initialTotalEnergy += node->GetCheckEnergy();
@@ -72,7 +72,7 @@ void PhysicEngine::Step(Scalar delta)
         ApplyTransitions();
     }
 
-     __int128 finalTotalN = 0;
+    Quantity finalTotalN = 0;
     for(FluidNode* node : m_nodes)
     {
         finalTotalN += node->GetCheckN();
@@ -80,10 +80,10 @@ void PhysicEngine::Step(Scalar delta)
 
     Scalar check = ComputeEnergy("after all step");
     assert((initialTotalEnergy - check) < 1e-2);
-    assert(initialTotalN == finalTotalN);
+    assert(initialTotalN - finalTotalN < 1e-6);
 
 
-#if 1
+#if 0
     {
         for(int i = 0; i < 4; i++)
         {
@@ -96,7 +96,7 @@ void PhysicEngine::Step(Scalar delta)
     }
 #endif
 
-#if 1
+#if 0
     {
         for(int i = 0; i < 80; i++)
         {
