@@ -41,7 +41,9 @@ public:
     Energy GetOutputEnergy() const;
     Energy GetInputEnergy() const;
     Energy GetCheckEnergy() const { return m_inputThermalEnergy + m_outputThermalEnergy; }
+    Energy GetEnergyPerK() const { return m_cacheEnergyPerK; }
     Quantity GetCheckN() const { return m_cacheCheckN; }
+    
 
     Mm GetAltitudeMm() const { return m_altitude; }
     void SetAltitudeMm(Mm altitude);
@@ -85,6 +87,7 @@ private:
     Scalar m_cachePressure;
     Scalar m_cachePressureGradient;
     Scalar m_cacheTemperature;
+    Scalar m_cacheEnergyPerK;
 };
 
 }

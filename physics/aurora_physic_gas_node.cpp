@@ -433,7 +433,7 @@ void GasNode::ComputeCache()
     // Compute N, energy and mass
     m_cacheCheckN = 0;
     m_cacheMass = 0;
-    Energy energyPerK = 0;
+    m_cacheEnergyPerK = 0;
     Quantity totalInputN = 0;
     Quantity totalOutputN = 0;
 
@@ -449,7 +449,7 @@ void GasNode::ComputeCache()
         m_cacheCheckN += materialN;
         if(materialN > 0)
         {
-            energyPerK += PhysicalConstants::GetSpecificHeatByN(gas) * materialN;
+            m_cacheEnergyPerK += PhysicalConstants::GetSpecificHeatByN(gas) * materialN;
             m_cacheMass += PhysicalConstants::GetMassByN(gas) * materialN;
         }
     }
@@ -482,13 +482,13 @@ void GasNode::ComputeCache()
     }
 
     // Compute temperature
-    if(energyPerK == 0)
+    if(m_cacheEnergyPerK == 0)
     {
         m_cacheTemperature = 0;
     }
     else
     {
-        m_cacheTemperature = (m_inputThermalEnergy + m_outputThermalEnergy) / energyPerK;
+        m_cacheTemperature = (m_inputThermalEnergy + m_outputThermalEnergy) / m_cacheEnergyPerK;
     }
 
     if(m_cacheTemperature < 0)
