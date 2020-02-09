@@ -13,8 +13,8 @@ AuroraWorld::AuroraWorld()
     //count = 0;
     printf("plop1\n");
     WorldEditor worldEditor(*this);
-    //worldEditor.GenerateTestWorld1();
-    worldEditor.GenerateTestWorld2();
+    worldEditor.GenerateTestWorld1();
+    //worldEditor.GenerateTestWorld2();
 
     InitPhysics();
 }

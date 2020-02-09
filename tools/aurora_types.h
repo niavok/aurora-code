@@ -67,7 +67,10 @@ struct MmRect
 
 inline Scalar sqr(Scalar x) { return x*x; }
 
+inline Scalar sign(Scalar val) {
+    return (0 < val) - (val < 0);
 }
 
+}
 
 #endif

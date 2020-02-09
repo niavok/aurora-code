@@ -18,9 +18,10 @@ WorldEditor::~WorldEditor()
 
 void WorldEditor::GenerateTestWorld1()
 {
-    int blockCountX = 50;
+    int blockCountX = 1;
+    int blockCountY = 20;
     Mm tileSizeMm = 50;
-    Level* surfaceLevel = m_world.CreateLevel(true, tileSizeMm, 0, blockCountX, 1); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Level* surfaceLevel = m_world.CreateLevel(false, tileSizeMm, 0, blockCountX, blockCountY); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
     int surfaceWidth = surfaceLevel->GetSizeMm().x;
     int surfaceHeight = surfaceLevel->GetSizeMm().y;
 
@@ -37,9 +38,9 @@ void WorldEditor::GenerateTestWorld1()
     PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
 
     TileComposition highPressureDryAir = dryAir;
-    highPressureDryAir.Gas.pressure = 100000 * 10.;
-    highPressureDryAir.Gas.temperature = 274. + 500;
-    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(0, 0, surfaceWidth/ blockCountX, surfaceHeight));
+    highPressureDryAir.Gas.pressure = 100000 * 3.;
+    highPressureDryAir.Gas.temperature = 274. + 500 *0;
+    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(0, 0, surfaceWidth/ blockCountX, surfaceHeight/ blockCountY));
 }
 
 void WorldEditor::GenerateTestWorld2()

@@ -60,7 +60,7 @@ void GasNode::AddN(Gas gas, Quantity N)
 
 void GasNode::AddThermalEnergy(Energy thermalEnergy)
 {
-    m_inputThermalEnergy += thermalEnergy;
+    m_outputThermalEnergy += thermalEnergy;
     m_cacheComputed = false;
 }
 /*
@@ -396,6 +396,7 @@ void GasNode::ApplyTransitions()
             if(quantity > 0)
             {
                 m_inputNComposition[gas] += quantity;
+                m_movingN += quantity;
             }
             else
             {
@@ -461,6 +462,15 @@ void GasNode::ComputeCache()
     else
     {
         m_cacheN = m_cacheCheckN;
+    }
+
+    if(m_cacheN > 0)
+    {
+        m_cacheMolarMass = m_cacheMass / m_cacheN;
+    }
+    else
+    {
+        m_cacheMolarMass = 0;
     }
 
     if(totalInputN < 0)

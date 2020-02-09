@@ -19,7 +19,7 @@ public:
     Quantity GetInputN(Gas gas) const;
     Quantity GetOutputN(Gas gas) const;
     Energy GetThermalEnergy() const;
-
+    
     void AddN(Gas gas, Quantity N);
     void AddThermalEnergy(Energy thermalEnergy);
 
@@ -43,7 +43,7 @@ public:
     Energy GetCheckEnergy() const { return m_inputThermalEnergy + m_outputThermalEnergy; }
     Energy GetEnergyPerK() const { return m_cacheEnergyPerK; }
     Quantity GetCheckN() const { return m_cacheCheckN; }
-    
+    Scalar GetMolarMass() const { return m_cacheMolarMass; }
 
     Mm GetAltitudeMm() const { return m_altitude; }
     void SetAltitudeMm(Mm altitude);
@@ -88,6 +88,7 @@ private:
     Scalar m_cachePressureGradient;
     Scalar m_cacheTemperature;
     Scalar m_cacheEnergyPerK;
+    Scalar m_cacheMolarMass;
 };
 
 }
