@@ -98,7 +98,7 @@ void GasGasTransition::Step(Scalar delta)
     Meter deltaAltitude = MmToMeter(B.GetAltitudeMm() - A.GetAltitudeMm());
 
     //Scalar viscosity = 0.1;
-    Scalar viscosity = 0.70;
+    Scalar viscosity = 0.60;
 
     //Scalar pressureADeltaN = pressureA * m_section * viscosity;
     //Scalar pressureBDeltaN = pressureB * m_section * viscosity;
@@ -425,7 +425,7 @@ void GasGasTransition::Step(Scalar delta)
     }
 
     Energy newKineticEnergyBeforeLoss = abs(newKineticEnergyDelta);
-    Energy thermalLoss = newKineticEnergyBeforeLoss * 0.001; // TODO make depend on context
+    Energy thermalLoss = newKineticEnergyBeforeLoss * 0.01; // TODO make depend on context
     Energy newKineticEnergy = newKineticEnergyBeforeLoss - thermalLoss;
 
 
