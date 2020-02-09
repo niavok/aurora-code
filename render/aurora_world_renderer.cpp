@@ -14,6 +14,7 @@
 namespace aurora {
 
 static Scalar MmToGodot = 1.; // Mn in micrometer, Godot in Mm
+static Scalar MeterToGodot = 1.e3; // Mn in micrometer, Godot in Mm
 
 AuroraWorldRenderer::AuroraWorldRenderer()
 	: m_targetWorld(nullptr)
@@ -278,7 +279,7 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 
 			//real_t length = sqrt(link->outputKineticEnergy) * 1;
 
-			draw_line(tilePosition + relativeBase + offsetPosition, tilePosition + relativeBase + offsetPosition + offsetDirection * length, transitionColor, width);
+			draw_line(tilePosition + relativeBase * MeterToGodot + offsetPosition, tilePosition + relativeBase * MeterToGodot + offsetPosition + offsetDirection * length, transitionColor, width);
 		}
 	}
 }
@@ -327,11 +328,13 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
             Scalar temperature = gas.GetTemperature();
 
             //gas.ComputeNPT(N, pressure, temperature);
-            Scalar bottomPressure = tilePressure + gas.GetPressureGradient() * tile->GetSizeMm();
+            Scalar bottomPressure = tilePressure + gas.GetPressureGradient() * MmToMeter(tile->GetSizeMm());
 
             auto PressureToColor = [](Scalar pressure)
             {
-                Scalar const minPressure = 16000;
+                //Scalar const minPressure = 16000;
+                //Scalar const maxPressure = 300000;
+				Scalar const minPressure = 50000;
                 Scalar const maxPressure = 300000;
 
                 return float((pressure-minPressure) / (maxPressure - minPressure));
@@ -369,11 +372,11 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             draw_polygon(points, colors);
 
-            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure * 1e-5), color);
-            m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
-			draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
-			draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
-			
+            //m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure * 1e-5), color);
+            //m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
+			//draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
+			//draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
+
 			/*draw_line(pos, pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
 			draw_line(pos, pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));
 			draw_line(pos+ Vector2(size-1, size-1), pos + Vector2(0, size-1), Color(0.5,0.5,0.5));

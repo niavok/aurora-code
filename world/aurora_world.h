@@ -33,7 +33,7 @@ public:
     std::vector<Level*>& GetLevels() { return m_levels; }
     std::vector<Level*> const& GetLevels() const { return m_levels; }
 
-    void ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Mm relativeAltitudeA, Mm relativeAltitudeB,  Mm relativeLongitudeA, Mm relativeLongitudeB, Mm section);
+    void ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB,  Meter relativeLongitudeA, Meter relativeLongitudeB, Meter section);
 
     bool IsPaused();
     void SetPause(bool pause);

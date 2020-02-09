@@ -98,7 +98,7 @@ void GasGasTransition::Step(Scalar delta)
     Meter deltaAltitude = MmToMeter(B.GetAltitudeMm() - A.GetAltitudeMm());
 
     //Scalar viscosity = 0.1;
-    Scalar viscosity = 1.0;
+    Scalar viscosity = 0.7;
 
     //Scalar pressureADeltaN = pressureA * m_section * viscosity;
     //Scalar pressureBDeltaN = pressureB * m_section * viscosity;
@@ -168,52 +168,63 @@ void GasGasTransition::Step(Scalar delta)
             sourcePressure = pressureB;
         }
 
+        if(deltaAltitude == 0)
+        {
+             assert(!isnan(kineticAcceleration));
+        }
+
         GasNode& pressureSourceNode = *((GasNode*) m_links[pressureSourceIndex].node);
         GasNode& pressureDestinationNode = *((GasNode*) m_links[1-pressureSourceIndex].node);
 
-
         // Proto
         Scalar sourceN0 = pressureSourceNode.GetN() - pressureSourceNode.GetMovingN();
-        Energy sourceE0 = pressureSourceNode.GetEnergy() * sourceN0 / pressureSourceNode.GetN();
-        Scalar sourceMolarMass = pressureSourceNode.GetMolarMass();
-        Scalar sourceMolarHeatCapacity = pressureSourceNode.GetEnergyPerK() / pressureSourceNode.GetN();
 
-        Scalar destinationN0 = pressureDestinationNode.GetN() - pressureDestinationNode.GetMovingN();
-        Energy destinationE0 = pressureDestinationNode.GetEnergy() * destinationN0 / pressureDestinationNode.GetN();
-        Scalar destinationMolarMass = pressureDestinationNode.GetMolarMass();
-        Scalar destinationMolarHeatCapacity = pressureDestinationNode.GetEnergyPerK() / pressureDestinationNode.GetN();
-
-        Volume sourceVolume = pressureSourceNode.GetVolume();
-        Volume destinationVolume = pressureDestinationNode.GetVolume();
-
-        auto ComputeF = [](Energy E0, Scalar molarHeatCapacity, Quantity N0, Scalar molarMass)
+        if(sourceN0 > 1e-15 && pressureSourceNode.GetEnergy() > 0)
         {
-            return (PhysicalConstants::gasConstant * E0) / molarHeatCapacity + N0 * molarMass * PhysicalConstants::gravity;
-        };
+            Energy sourceE0 = pressureSourceNode.GetEnergy() * sourceN0 / pressureSourceNode.GetN();
+            Scalar sourceMolarMass = pressureSourceNode.GetMolarMass();
+            Scalar sourceMolarHeatCapacity = pressureSourceNode.GetEnergyPerK() / pressureSourceNode.GetN();
+            Scalar sourceDh = m_links[pressureSourceIndex].altitudeRelativeToNode;
 
-        auto ComputeM = [](Energy E0, Scalar molarHeatCapacity, Quantity N0, Scalar molarMass)
-        {
-            return PhysicalConstants::gasConstant / molarHeatCapacity + N0 * molarMass * PhysicalConstants::gravity / E0;
-        };
+            Scalar destinationN0 = pressureDestinationNode.GetN() - pressureDestinationNode.GetMovingN();
+            Energy destinationE0 = destinationN0 > 0 ? pressureDestinationNode.GetEnergy() * destinationN0 / pressureDestinationNode.GetN() : 0;
+            Scalar destinationMolarMass = pressureDestinationNode.GetMolarMass();
+            Scalar destinationMolarHeatCapacity = destinationN0 > 0 ? pressureDestinationNode.GetEnergyPerK() / pressureDestinationNode.GetN() : sourceMolarHeatCapacity;
+            Scalar destinationDh = m_links[1-pressureSourceIndex].altitudeRelativeToNode;
 
-        Scalar sourceF = ComputeF(sourceE0, sourceMolarHeatCapacity, sourceN0, sourceMolarMass);
-        Scalar destinationF = ComputeF(destinationE0, destinationMolarHeatCapacity, destinationN0, destinationMolarMass);
+            Volume sourceVolume = pressureSourceNode.GetVolume();
+            Volume destinationVolume = pressureDestinationNode.GetVolume();
 
-        Scalar sourceM = ComputeM(sourceE0, sourceMolarHeatCapacity, sourceN0, sourceMolarMass);
-        Scalar destinationM = ComputeM(destinationE0, destinationMolarHeatCapacity, destinationN0, destinationMolarMass);
+            auto ComputeF = [](Energy E0, Scalar molarHeatCapacity, Quantity N0, Scalar molarMass, Scalar dh)
+            {
+                return (PhysicalConstants::gasConstant * E0) / molarHeatCapacity + N0 * molarMass * PhysicalConstants::gravity * dh;
+            };
+
+            auto ComputeM = [](Energy sourceE, Scalar molarHeatCapacity, Quantity sourceN, Scalar molarMass, Scalar dh)
+            {
+                return PhysicalConstants::gasConstant / molarHeatCapacity + sourceN * molarMass * PhysicalConstants::gravity * dh / sourceE;
+            };
+
+            Scalar sourceF = ComputeF(sourceE0, sourceMolarHeatCapacity, sourceN0, sourceMolarMass, sourceDh);
+            Scalar destinationF = ComputeF(destinationE0, destinationMolarHeatCapacity, destinationN0, destinationMolarMass, destinationDh);
+
+            Scalar sourceM = ComputeM(sourceE0, sourceMolarHeatCapacity, sourceN0, sourceMolarMass, sourceDh);
+            Scalar destinationM = ComputeM(sourceE0, destinationMolarHeatCapacity, sourceN0, destinationMolarMass, destinationDh);
 
 
-        Energy dE = (destinationVolume * sourceF - sourceVolume * destinationF) / (sourceVolume * destinationM + destinationVolume * sourceM);
+            Energy dE = (destinationVolume * sourceF - sourceVolume * destinationF) / (sourceVolume * destinationM + destinationVolume * sourceM);
 
-        Quantity dN = dE * sourceN0 / sourceE0;
+            Quantity dN = dE * sourceN0 / sourceE0;
 
-        Quantity sourceTotalN = pressureSourceNode.GetN();
-        Quantity sourceTotalUsableN = sourceTotalN / pressureSourceNode.GetTransitionLinks().size();
+            Quantity sourceTotalN = pressureSourceNode.GetN();
+            Quantity sourceTotalUsableN = sourceTotalN / pressureSourceNode.GetTransitionLinks().size();
 
-        Quantity movingN = std::min(dN,sourceTotalUsableN);
+            Quantity movingN = std::min(dN,sourceTotalUsableN);
 
-        Scalar movingMass = movingN * pressureSourceNode.GetMolarMass();
-        kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef2 * viscosity;
+            Scalar movingMass = movingN * pressureSourceNode.GetMolarMass();
+            kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef2 * viscosity;
+            assert(!isnan(kineticAcceleration));
+        }
 
 #if 0
         Scalar APressureN = A.GetN() - A.GetMovingN();
@@ -414,7 +425,7 @@ void GasGasTransition::Step(Scalar delta)
     }
 
     Energy newKineticEnergyBeforeLoss = abs(newKineticEnergyDelta);
-    Energy thermalLoss = newKineticEnergyBeforeLoss * 0.001;
+    Energy thermalLoss = newKineticEnergyBeforeLoss * 0.001; // TODO make depend on context
     Energy newKineticEnergy = newKineticEnergyBeforeLoss - thermalLoss;
 
 
