@@ -87,8 +87,8 @@ void WorldEditor::GenerateTestWorld2()
     //PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight / 6, surfaceWidth / 6,surfaceHeight /8));
 
     TileComposition highPressureDryAir = dryAir;
-    highPressureDryAir.Gas.pressure = 100000 * 2000;
-    highPressureDryAir.Gas.temperature = 274.+5000;
+    highPressureDryAir.Gas.pressure = 100000 * 200;
+    highPressureDryAir.Gas.temperature = 274.+500;
     PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(surfaceWidth / 4, 2*surfaceHeight/3, surfaceHeight / 64, surfaceHeight / 64));
 }
 
