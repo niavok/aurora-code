@@ -7,6 +7,7 @@
 #include "../world/aurora_level.h"
 
 #include "../physics/aurora_physic_gas_gas_transition.h"
+#include "../physics/aurora_physic_constants.h"
 
 #include <string>
 #include <assert.h>
@@ -215,19 +216,25 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 		// Draw flow
 		for(TransitionLink const & transitionLink : gas.GetTransitionLinks())
 		{
-			if(transitionLink.index > 0)
-			{
-				// Display on master
-				//continue;
-			}
-
 			GasGasTransition const* transition = reinterpret_cast<GasGasTransition*>(transitionLink.transition);
 
 			Transition::NodeLink const* link = transition->GetNodeLink(transitionLink.index);
-			if(link->outputKineticEnergy == 0 && link->inputKineticEnergy == 0)
+
+			assert(link->outputKineticEnergy == 0);
+			assert(link->inputKineticEnergy == 0);
+
+			Energy transitionEnergy = transition->GetKineticEnergy();
+
+			if(transitionEnergy < 0 && transitionLink.index == 0)
 			{
 				continue;
 			}
+
+			if(transitionEnergy > 0 && transitionLink.index == 1)
+			{
+				continue;
+			}
+
 
 			//Meter altitudeRelativeToNode;
 			//Meter longitudeRelativeToNode;
@@ -245,30 +252,30 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 			{
 			case Transition::Direction::DIRECTION_DOWN:
 				offsetPosition = Vector2(-margin_offset, 0);
-				offsetDirection = Vector2(0, -1);
-				transitionColor = Color(1, 0, 0);
+				offsetDirection = Vector2(0, 1);
+				transitionColor = Color(1, 0, 0, 0.5);
 				break;
 			case Transition::Direction::DIRECTION_UP:
 				offsetPosition = Vector2(margin_offset, 0);
-				offsetDirection = Vector2(0, 1);
-				transitionColor = Color(0, 1, 0);
+				offsetDirection = Vector2(0, -1);
+				transitionColor = Color(0, 1, 0, 0.5);
 				break;
 			case Transition::Direction::DIRECTION_LEFT:
 				offsetPosition = Vector2(0, -margin_offset);
-				offsetDirection = Vector2(1, 0);
-				transitionColor = Color(0, 0, 1);
+				offsetDirection = Vector2(-1, 0);
+				transitionColor = Color(0, 0, 1, 0.5);
 				break;
 			case Transition::Direction::DIRECTION_RIGHT:
 				offsetPosition = Vector2(0, margin_offset);
-				offsetDirection = Vector2(-1, 0);
-				transitionColor = Color(1, 1, 0);
+				offsetDirection = Vector2(1, 0);
+				transitionColor = Color(1, 1, 0, 0.5);
 				break;
 			default:
 				assert(false);
 				break;
 			}
 
-			real_t length = (link->outputKineticEnergy + link->inputKineticEnergy) * 10.0;
+			real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 100.0 * PhysicalConstants::kineticCoef2;
 			real_t width = 1.f;
 			real_t maxLength = tile->GetSizeMm() * MmToGodot * 0.9;
 			if(length > maxLength)
@@ -321,7 +328,8 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
         if(true || (pos.x < 1000 && pos.y < 1000))
         {
-            Color color(0.9f,0.9f,0.9f);
+            //Color color(0.9f,0.9f,0.9f);
+			Color color(0.5f,0.5f,0.5f);
             GasNode const& gas = tile->GetContent()->GetGazNode();
 
             Scalar tilePressure = gas.GetPressure();
@@ -334,8 +342,8 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
             {
                 //Scalar const minPressure = 16000;
                 //Scalar const maxPressure = 300000;
-				Scalar const minPressure = 50000;
-                Scalar const maxPressure = 300000;
+				Scalar const minPressure = 99900;
+                Scalar const maxPressure = 100100;
 
                 return float((pressure-minPressure) / (maxPressure - minPressure));
 				//return 0;
@@ -372,10 +380,11 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             draw_polygon(points, colors);
 
-            //m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure * 1e-5), color);
-            //m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
-			//draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
-			//draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
+            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure - 1e5  /** 1e-5*/), color);
+			//m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(bottomPressure - 1e5  /** 1e-5*/), color);
+            m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
+			draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
+			draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
 
 			/*draw_line(pos, pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
 			draw_line(pos, pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));

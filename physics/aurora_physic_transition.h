@@ -61,6 +61,7 @@ public:
 
     virtual ~Transition() {}
     virtual void Step(Scalar delta) = 0;
+    virtual void ApplyInput() = 0;
 
     virtual FluidNode* GetNodeA() = 0;
     virtual FluidNode* GetNodeB() = 0;
@@ -90,7 +91,7 @@ public:
     virtual size_t GetNodeLinkCount() = 0;
 
 
-    //virtual Energy GetEnergy() const = 0;
+    virtual Energy GetKineticEnergy() const = 0;
 
 protected:
     Direction m_direction;

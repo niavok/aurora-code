@@ -51,7 +51,8 @@ private:
 
     void PrepareTransitions();
     void ComputeTransitions(Scalar delta);
-    void ApplyTransitions();
+    void ApplyTransitionsToNodes();
+    void ApplyTransitionsInput();
 
     Energy ComputeEnergy(const char* label);
 

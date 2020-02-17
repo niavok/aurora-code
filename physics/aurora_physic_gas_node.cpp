@@ -108,7 +108,7 @@ Energy GasNode::GetThermalEnergy() const
 
 void GasNode::PrepareTransitions()
 {
-    MigrateKineticEnergy();
+    //MigrateKineticEnergy();
 }
 
 void GasNode::MigrateKineticEnergy()
@@ -396,7 +396,7 @@ void GasNode::ApplyTransitions()
             if(quantity > 0)
             {
                 m_inputNComposition[gas] += quantity;
-                m_movingN += quantity;
+                //m_movingN += quantity;
             }
             else
             {
@@ -414,7 +414,7 @@ void GasNode::ApplyTransitions()
         FlushInput();
     }
 
-    //MigrateKineticEnergy();
+    MigrateKineticEnergy();
 }
 
 void GasNode::FlushInput()

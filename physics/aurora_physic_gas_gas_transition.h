@@ -34,9 +34,10 @@ public:
     size_t GetNodeLinkCount() { return LinkCount; }
 
 
-    //Energy GetEnergy() const { return m_kineticEnergy; }
+    Energy GetKineticEnergy() const { return m_kineticEnergy; }
 
     void Step(Scalar delta);
+    void ApplyInput();
 
     static const int LinkCount = 2;
 
@@ -53,7 +54,7 @@ private:
     Scalar m_frictionCoef;
 
     // Variables
-    //Energy m_kineticEnergy;
+    Energy m_kineticEnergy;
     //Energy m_inputEnergyFromA;
     //Energy m_inputEnergyFromB;
 
