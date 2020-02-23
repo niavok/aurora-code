@@ -275,7 +275,7 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 				break;
 			}
 
-			real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 100.0 * PhysicalConstants::kineticCoef2;
+			real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 100 * PhysicalConstants::kineticCoef2;
 			real_t width = 1.f;
 			real_t maxLength = tile->GetSizeMm() * MmToGodot * 0.9;
 			if(length > maxLength)
@@ -380,9 +380,9 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             draw_polygon(points, colors);
 
-            m_debugFont->draw(ci, pos + Vector2(10, 20), rtos(tilePressure - 1e5  /** 1e-5*/), color);
-			//m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(bottomPressure - 1e5  /** 1e-5*/), color);
-            m_debugFont->draw(ci, pos + Vector2(10, 40), rtos(temperature), color);
+            m_debugFont->draw(ci, pos + Vector2(10, 15), rtos(tilePressure - 1e5  /** 1e-5*/), color);
+			m_debugFont->draw(ci, pos + Vector2(10, 30), rtos(bottomPressure - 1e5  /** 1e-5*/), color);
+            m_debugFont->draw(ci, pos + Vector2(10, 45), rtos(temperature), color);
 			draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
 			draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
 

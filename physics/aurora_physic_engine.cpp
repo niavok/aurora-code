@@ -221,6 +221,12 @@ void PhysicEngine::ComputeTransitions(Scalar delta)
 {
     static int stepCount = 0;
     printf("PhysicEngine::Step %d\n", stepCount);
+
+    if(stepCount == 2371)
+    {
+        printf("plop\n");
+    }
+
     stepCount++;
 
     for(Transition* transition : m_transitions)

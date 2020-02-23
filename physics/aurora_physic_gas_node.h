@@ -30,6 +30,8 @@ public:
 
     Scalar GetPressure() const;
     Scalar GetTemperature() const;
+    Scalar GetInputTemperature() const;
+    Scalar GetOutputTemperature() const;
     Quantity GetN() const;
     Quantity GetMovingN() const;
     Scalar GetPressureGradient() const;
@@ -87,6 +89,8 @@ private:
     Scalar m_cachePressure;
     Scalar m_cachePressureGradient;
     Scalar m_cacheTemperature;
+    Scalar m_cacheInputTemperature;
+    Scalar m_cacheOutputTemperature;
     Scalar m_cacheEnergyPerK;
     Scalar m_cacheMolarMass;
 };

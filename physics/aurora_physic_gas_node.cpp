@@ -3,6 +3,8 @@
 #include "aurora_physic_constants.h"
 #include "aurora_physic_types.h"
 
+#include <stdio.h>
+
 namespace aurora {
 
 
@@ -366,6 +368,12 @@ void GasNode::ApplyTransitions()
 {
     m_movingN = 0;
     bool isFlushNeeded = false;
+
+    if(GetAltitudeMm() == -1425 && GetTemperature() > 500)
+    {
+        printf("ApplyTransitions t=%f p=%f\n", GetTemperature(), GetPressure());
+    }
+
     // Apply transition output
     for(TransitionLink& transitionLink : m_transitionLinks)
     {
@@ -373,6 +381,11 @@ void GasNode::ApplyTransitions()
 
         Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
         assert(link->node == this);
+
+        if(GetAltitudeMm() == -1425 && GetTemperature() > 500)
+        {
+            printf("link->outputThermalEnergy=%f\n", link->outputThermalEnergy);
+        }
 
         if(link->outputThermalEnergy > 0)
         {
@@ -393,6 +406,16 @@ void GasNode::ApplyTransitions()
         {
             Quantity quantity = link->outputMaterial[gas];
 
+            if(quantity == 0)
+            {
+                continue;
+            }
+
+            if(GetAltitudeMm() == -1425 && GetTemperature() > 500)
+            {
+                printf("quantity=%f\n", quantity);
+            }
+
             if(quantity > 0)
             {
                 m_inputNComposition[gas] += quantity;
@@ -412,6 +435,7 @@ void GasNode::ApplyTransitions()
     if(isFlushNeeded)
     {
         FlushInput();
+        printf("flush input alt=%d t=%f p=%f\n", m_altitude, m_cacheTemperature, m_cachePressure);
     }
 
     MigrateKineticEnergy();
@@ -437,20 +461,34 @@ void GasNode::ComputeCache()
     m_cacheEnergyPerK = 0;
     Quantity totalInputN = 0;
     Quantity totalOutputN = 0;
+    Scalar inputEnergyPerK = 0;
+    Scalar outputEnergyPerK = 0;
+
+    if(GetAltitudeMm() == -1425 && m_cacheTemperature > 500)
+    {
+        printf("ComputeCache t=%f p=%f\n", m_cacheTemperature, GetPressure());
+    }
+
 
     assert(!isnan(m_inputThermalEnergy));
     assert(!isnan(m_outputThermalEnergy));
 
      for(Gas gas : AllGas())
     {
-        Quantity materialN = m_inputNComposition[gas] + m_outputNComposition[gas];
+        Quantity inputMaterialN = m_inputNComposition[gas];
+        Quantity outputMaterialN = m_outputNComposition[gas];
+        Quantity materialN = inputMaterialN + outputMaterialN;
         totalInputN += m_inputNComposition[gas];
         totalOutputN += m_outputNComposition[gas];
 
         m_cacheCheckN += materialN;
         if(materialN > 0)
         {
-            m_cacheEnergyPerK += PhysicalConstants::GetSpecificHeatByN(gas) * materialN;
+            Scalar specificHeatByN = PhysicalConstants::GetSpecificHeatByN(gas);
+            m_cacheEnergyPerK += specificHeatByN * materialN;
+            inputEnergyPerK += specificHeatByN * inputMaterialN;
+            outputEnergyPerK += specificHeatByN * outputMaterialN;
+
             m_cacheMass += PhysicalConstants::GetMassByN(gas) * materialN;
         }
     }
@@ -501,6 +539,24 @@ void GasNode::ComputeCache()
         m_cacheTemperature = (m_inputThermalEnergy + m_outputThermalEnergy) / m_cacheEnergyPerK;
     }
 
+    if(inputEnergyPerK == 0)
+    {
+        m_cacheInputTemperature = 0;
+    }
+    else
+    {
+        m_cacheInputTemperature = m_inputThermalEnergy / inputEnergyPerK;
+    }
+
+    if(outputEnergyPerK == 0)
+    {
+        m_cacheOutputTemperature = 0;
+    }
+    else
+    {
+        m_cacheOutputTemperature = m_outputThermalEnergy / outputEnergyPerK;
+    }
+
     if(m_cacheTemperature < 0)
     {
         m_cacheTemperature = 0;
@@ -519,6 +575,13 @@ void GasNode::ComputeCache()
     m_cachePressureGradient = density *  PhysicalConstants::gravity;
 
     m_cacheComputed = true;
+
+
+    if(GetAltitudeMm() == -1425 && m_cacheTemperature > 500)
+    {
+        printf("pressureN=%f ei=%f eo=%f e=%f\n", pressureN, m_inputThermalEnergy, m_outputThermalEnergy, m_inputThermalEnergy + m_outputThermalEnergy);
+    }
+
 }
 
 Scalar GasNode::GetPressure() const
@@ -531,6 +594,18 @@ Scalar GasNode::GetTemperature() const
 {
     assert(m_cacheComputed);
     return m_cacheTemperature;
+}
+
+Scalar GasNode::GetInputTemperature() const
+{
+    assert(m_cacheComputed);
+    return m_cacheInputTemperature;
+}
+
+Scalar GasNode::GetOutputTemperature() const
+{
+    assert(m_cacheComputed);
+    return m_cacheOutputTemperature;
 }
 
 Quantity GasNode::GetN() const
