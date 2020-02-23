@@ -366,13 +366,39 @@ void GasNode::MigrateKineticEnergy()
 
 void GasNode::ApplyTransitions()
 {
+    Quantity NDiff = 0;
+    Energy EDiff = 0;
+
+    for(TransitionLink& transitionLink : m_transitionLinks)
+    {
+        Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
+        
+        EDiff += link->outputThermalEnergy;
+
+        for(Gas gas : AllGas())
+        {
+            Quantity quantity = link->outputMaterial[gas];
+            NDiff += quantity;
+        }
+    }
+
+    Quantity futureQty = m_cacheN + NDiff;
+    Quantity futureE = m_inputThermalEnergy + m_outputThermalEnergy + EDiff;
+
+    if(futureQty < 0)
+    {
+        printf("futureQty %f\n", futureQty);
+    }
+
+     if(futureE < 0)
+    {
+        printf("futureE %f\n", futureE);
+    }
+
+
+
     m_movingN = 0;
     bool isFlushNeeded = false;
-
-    if(GetAltitudeMm() == -1425 && GetTemperature() > 500)
-    {
-        printf("ApplyTransitions t=%f p=%f\n", GetTemperature(), GetPressure());
-    }
 
     // Apply transition output
     for(TransitionLink& transitionLink : m_transitionLinks)
@@ -381,11 +407,6 @@ void GasNode::ApplyTransitions()
 
         Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
         assert(link->node == this);
-
-        if(GetAltitudeMm() == -1425 && GetTemperature() > 500)
-        {
-            printf("link->outputThermalEnergy=%f\n", link->outputThermalEnergy);
-        }
 
         if(link->outputThermalEnergy > 0)
         {
@@ -411,11 +432,6 @@ void GasNode::ApplyTransitions()
                 continue;
             }
 
-            if(GetAltitudeMm() == -1425 && GetTemperature() > 500)
-            {
-                printf("quantity=%f\n", quantity);
-            }
-
             if(quantity > 0)
             {
                 m_inputNComposition[gas] += quantity;
@@ -435,7 +451,6 @@ void GasNode::ApplyTransitions()
     if(isFlushNeeded)
     {
         FlushInput();
-        printf("flush input alt=%d t=%f p=%f\n", m_altitude, m_cacheTemperature, m_cachePressure);
     }
 
     MigrateKineticEnergy();
@@ -464,19 +479,16 @@ void GasNode::ComputeCache()
     Scalar inputEnergyPerK = 0;
     Scalar outputEnergyPerK = 0;
 
-    if(GetAltitudeMm() == -1425 && m_cacheTemperature > 500)
-    {
-        printf("ComputeCache t=%f p=%f\n", m_cacheTemperature, GetPressure());
-    }
-
-
     assert(!isnan(m_inputThermalEnergy));
     assert(!isnan(m_outputThermalEnergy));
+    assert(m_outputThermalEnergy >= 0);
+    
 
      for(Gas gas : AllGas())
     {
         Quantity inputMaterialN = m_inputNComposition[gas];
         Quantity outputMaterialN = m_outputNComposition[gas];
+
         Quantity materialN = inputMaterialN + outputMaterialN;
         totalInputN += m_inputNComposition[gas];
         totalOutputN += m_outputNComposition[gas];
@@ -492,6 +504,8 @@ void GasNode::ComputeCache()
             m_cacheMass += PhysicalConstants::GetMassByN(gas) * materialN;
         }
     }
+
+    assert(totalOutputN >= 0);
 
     if(m_cacheCheckN < 0)
     {
@@ -575,12 +589,6 @@ void GasNode::ComputeCache()
     m_cachePressureGradient = density *  PhysicalConstants::gravity;
 
     m_cacheComputed = true;
-
-
-    if(GetAltitudeMm() == -1425 && m_cacheTemperature > 500)
-    {
-        printf("pressureN=%f ei=%f eo=%f e=%f\n", pressureN, m_inputThermalEnergy, m_outputThermalEnergy, m_inputThermalEnergy + m_outputThermalEnergy);
-    }
 
 }
 

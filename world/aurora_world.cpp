@@ -13,8 +13,8 @@ AuroraWorld::AuroraWorld()
     //count = 0;
     printf("plop1\n");
     WorldEditor worldEditor(*this);
-    worldEditor.GenerateTestWorld1();
-    //worldEditor.GenerateTestWorld2();
+    //worldEditor.GenerateTestWorld1();
+    worldEditor.GenerateTestWorld2();
 
     InitPhysics();
 }
@@ -124,11 +124,7 @@ void AuroraWorld::InitPhysics()
                     Meter relativeLongitudeB = MmToMeter(relativeLongitudeBMm);
 
                     Meter section = MmToMeter(MIN(tileToConnect->GetSizeMm(), tile->GetSizeMm()));
-                    
-                    if(tileToConnect->GetPositionMm().y < 500 ||  tileToConnect->GetPositionMm().y > 3500)
-                    {
-                        ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_LEFT), relativeAltitudeA, relativeAltitudeB, relativeLongitudeA, relativeLongitudeB, section);
-                    }
+                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_LEFT), relativeAltitudeA, relativeAltitudeB, relativeLongitudeA, relativeLongitudeB, section);
                 }
             }
 

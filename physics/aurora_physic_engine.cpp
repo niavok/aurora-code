@@ -81,7 +81,7 @@ void PhysicEngine::Step(Scalar delta)
 
     Scalar check = ComputeEnergy("after all step");
     // assert((initialTotalEnergy - check) < 1e-1); TODO repair
-    assert(initialTotalN - finalTotalN < 1e-6);
+    //assert(initialTotalN - finalTotalN < 1e-6);
 
 
 #if 0
@@ -221,11 +221,6 @@ void PhysicEngine::ComputeTransitions(Scalar delta)
 {
     static int stepCount = 0;
     printf("PhysicEngine::Step %d\n", stepCount);
-
-    if(stepCount == 2371)
-    {
-        printf("plop\n");
-    }
 
     stepCount++;
 

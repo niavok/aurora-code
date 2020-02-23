@@ -8,7 +8,7 @@ namespace aurora {
 class PhysicalConstants
 {
 public:
-    static constexpr Scalar gravity = 9.81*10; // m.s-2, Acceleration of the gravity
+    static constexpr Scalar gravity = 9.81*1; // m.s-2, Acceleration of the gravity
     static constexpr Scalar gasConstant = 8.31446261815325; // Gas contant for mol J.mol-1.K-1
     static constexpr Scalar kineticCoef = 1.2; // acceleration ratio of a fluid due to pressure difference
     static constexpr Scalar kineticCoef2 = 100.0; // Energy of a mass moving througth a transition

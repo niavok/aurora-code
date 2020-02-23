@@ -275,7 +275,7 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 				break;
 			}
 
-			real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 100 * PhysicalConstants::kineticCoef2;
+			real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 0.001 * PhysicalConstants::kineticCoef2;
 			real_t width = 1.f;
 			real_t maxLength = tile->GetSizeMm() * MmToGodot * 0.9;
 			if(length > maxLength)
@@ -340,10 +340,10 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             auto PressureToColor = [](Scalar pressure)
             {
-                //Scalar const minPressure = 16000;
-                //Scalar const maxPressure = 300000;
-				Scalar const minPressure = 99900;
-                Scalar const maxPressure = 100100;
+                Scalar const minPressure = 16000;
+                Scalar const maxPressure = 300000;
+				//Scalar const minPressure = 99900;
+                //Scalar const maxPressure = 100100;
 
                 return float((pressure-minPressure) / (maxPressure - minPressure));
 				//return 0;
