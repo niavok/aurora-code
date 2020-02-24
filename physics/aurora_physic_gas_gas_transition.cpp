@@ -518,18 +518,79 @@ void GasGasTransition::Step(Scalar delta)
     Energy newKineticEnergy = newKineticEnergyBeforeLoss - thermalLoss;
     assert(abs(newKineticEnergy) <= abs(newKineticEnergyDelta));
 
-    Energy energyDiff = newKineticEnergy - kineticEnergySum;
+   /* Energy energyDiffUnchecked = newKineticEnergy - kineticEnergySum;
+
+    Energy energyDiff;
+    if(energyDiffUnchecked > 0)
+    {
+        // Check if there is enought energy available
+
+
+
+    }
+    else
+    {
+        energyDiff = energyDiffUnchecked;
+    }*/
 
     //GasNode& sourceNode = *((GasNode*) m_links[sourceIndex].node);
     // TODO, use the ratio from the N / transition count
 
     Scalar kineticPropagationRatio = takenNRatio;
-    Energy transmitedKineticEnergy = newKineticEnergy * kineticPropagationRatio;
+    Energy transmitedKineticEnergyUnchecked = newKineticEnergy * kineticPropagationRatio;
+    //Energy newLocalKineticEnergyUnchecked = sign(newKineticEnergyDelta) * (newKineticEnergy - transmitedKineticEnergyUnchecked);
+    Energy newLocalKineticEnergyUnchecked = newKineticEnergy - transmitedKineticEnergyUnchecked;
 
-    Energy newLocalKineticEnergy = sign(newKineticEnergyDelta) * (newKineticEnergy - transmitedKineticEnergy);
+    auto ComputeAvailableEnergy = [&](int index)
+    {
+        GasNode& node = *((GasNode*) m_links[index].node);
+        return node.GetEnergy() / (node.GetTransitionLinks().size() * 1.01);
+    };
 
+    // Take transmited energy to destination
+    Energy destinationAvailableEnergy = ComputeAvailableEnergy(newDestinationIndex);
+    Energy destinationEnergyBalance = destinationAvailableEnergy + m_links[newDestinationIndex].outputThermalEnergy - transmitedKineticEnergyUnchecked;
 
+    Energy transmitedKineticEnergy;
+    if(destinationEnergyBalance < 0)
+    {
+        transmitedKineticEnergy = transmitedKineticEnergyUnchecked + destinationEnergyBalance;
+        assert(transmitedKineticEnergy >= 0);
+    }
+    else
+    {
+        transmitedKineticEnergy = transmitedKineticEnergyUnchecked;
+    }
+    m_links[newDestinationIndex].outputThermalEnergy -= transmitedKineticEnergy;
     m_links[newDestinationIndex].outputKineticEnergy = transmitedKineticEnergy;
+
+    // Take local energy to source
+    Energy sourceAvailableEnergy = ComputeAvailableEnergy(newSourceIndex);
+    Energy localKineticEnergyDiff = newLocalKineticEnergyUnchecked - kineticEnergySum;
+    Energy sourceEnergyBalance = sourceAvailableEnergy + m_links[newSourceIndex].outputThermalEnergy - localKineticEnergyDiff;
+
+    Energy localKineticEnergyGain;
+    if(sourceEnergyBalance < 0)
+    {
+        localKineticEnergyGain = localKineticEnergyDiff + sourceEnergyBalance;
+        assert(localKineticEnergyGain >= 0);
+    }
+    else
+    {
+        localKineticEnergyGain = localKineticEnergyDiff;
+    }
+    m_links[newSourceIndex].outputThermalEnergy -= localKineticEnergyGain;
+    Energy newLocalKineticEnergy =sign(newKineticEnergyDelta) * (kineticEnergySum + localKineticEnergyGain);
+
+
+/* Energy energyDiffUnchecked = newKineticEnergy - kineticEnergySum;
+
+   
+    
+    
+
+
+    
 
     Energy sourceEnergyDiff =  energyDiff /2;
     Energy destinationEnergyDiff =  energyDiff - sourceEnergyDiff;
@@ -543,11 +604,11 @@ void GasGasTransition::Step(Scalar delta)
         m_links[newDestinationIndex].outputThermalEnergy -= energyDiff;
     }*/
 
-    m_links[newSourceIndex].outputThermalEnergy -= sourceEnergyDiff;
-    m_links[newDestinationIndex].outputThermalEnergy -= destinationEnergyDiff;
+    //m_links[newSourceIndex].outputThermalEnergy -= sourceEnergyDiff;
+    //m_links[newDestinationIndex].outputThermalEnergy -= destinationEnergyDiff;
 
     // Max output energy
-    auto ComputeEnergyOvertake = [&](int index)
+  /*  auto ComputeEnergyOvertake = [&](int index)
     {
         GasNode& node = *((GasNode*) m_links[index].node);
         Energy maxUsableEnergy = node.GetEnergy() / (node.GetTransitionLinks().size() * 0.01);
@@ -567,7 +628,7 @@ void GasGasTransition::Step(Scalar delta)
         m_links[newSourceIndex].outputThermalEnergy += sourceOvertake;
     }
 
-    m_links[newSourceIndex].node->GetEnergy()
+    m_links[newSourceIndex].node->GetEnergy()*/
 
 /*
     if(energyDiff > 0)
@@ -580,7 +641,7 @@ void GasGasTransition::Step(Scalar delta)
     }*/
 
 
-    Energy finalCheckEnergy = abs(kineticEnergyAfterOvertake);
+    Energy finalCheckEnergy = abs(newLocalKineticEnergy);
     for(int i = 0; i < LinkCount; i++)
     {
         finalCheckEnergy += m_links[i].outputThermalEnergy;
@@ -590,7 +651,7 @@ void GasGasTransition::Step(Scalar delta)
 
 // TODO check with potential energy
     Energy energyCheckError = initialCheckEnergy - finalCheckEnergy;
-    //assert(std::abs(energyCheckError) < 1e-8);
+    assert(std::abs(energyCheckError) < 1e-8);
 
     m_kineticEnergy = newLocalKineticEnergy;
 }
