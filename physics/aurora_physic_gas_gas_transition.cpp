@@ -330,6 +330,7 @@ void GasGasTransition::Step(Scalar delta)
         if(sourceTotalN > 0 && needTransfertNT > 0)
         {
             Quantity sourceTotalUsableN = sourceTotalN / (sourceNode.GetTransitionLinks().size() * 1.01);
+            Energy sourceTotalUsableEnergy = sourceNode.GetEnergy() / (sourceNode.GetTransitionLinks().size() * 1.01);
 
 
 
@@ -399,6 +400,7 @@ void GasGasTransition::Step(Scalar delta)
 
             assert(sourceOutputTemperature > 0);
             bool needInput = false;
+            Energy takenEnergy = 0;
             if(sourceTotalOutputN > 0)
             {
                 Quantity needTransfertNAtOutputTemperature = needTransfertNT / sourceOutputTemperature;
@@ -420,7 +422,17 @@ void GasGasTransition::Step(Scalar delta)
                     needInput = false;
                 }
 
+                Energy outputTransfertEnergy = sourceNode.GetOutputEnergy() * outputTransfertN / sourceTotalOutputN;
+
+                if(outputTransfertEnergy > sourceTotalUsableEnergy)
+                {
+                    outputTransfertN = outputTransfertN * sourceTotalUsableEnergy / outputTransfertEnergy;
+                    outputTransfertEnergy = sourceTotalUsableEnergy;
+                    needInput = false;
+                }
+
                 takenN += outputTransfertN;
+                takenEnergy += outputTransfertEnergy;
 
                 TakeComposition(true, outputTransfertN, sourceTotalOutputN);
             }
@@ -436,6 +448,15 @@ void GasGasTransition::Step(Scalar delta)
 
                     Quantity needInputTransfertN = inputNeedTransfertNT / sourceNode.GetInputTemperature();
                     Quantity inputTransfertN = std::min(needInputTransfertN, sourceTotalUsableNForInput);
+
+                    Energy inputTransfertEnergy = sourceNode.GetInputEnergy() * inputTransfertN / sourceTotalInputN;
+                    Energy sourceTotalUsableEnergyForInput = sourceTotalUsableEnergy - takenEnergy;
+
+                    if(inputTransfertEnergy > sourceTotalUsableEnergyForInput)
+                    {
+                        inputTransfertN = inputTransfertN * sourceTotalUsableEnergyForInput / inputTransfertEnergy;
+                    }
+
                     TakeComposition(false, inputTransfertN, sourceTotalInputN);
                     takenN += inputTransfertN;
                 }
@@ -555,7 +576,7 @@ void GasGasTransition::Step(Scalar delta)
     if(destinationEnergyBalance < 0)
     {
         transmitedKineticEnergy = transmitedKineticEnergyUnchecked + destinationEnergyBalance;
-        assert(transmitedKineticEnergy >= 0);
+        //assert(transmitedKineticEnergy >= 0);
     }
     else
     {
@@ -573,7 +594,7 @@ void GasGasTransition::Step(Scalar delta)
     if(sourceEnergyBalance < 0)
     {
         localKineticEnergyGain = localKineticEnergyDiff + sourceEnergyBalance;
-        assert(localKineticEnergyGain >= 0);
+        //assert(localKineticEnergyGain >= 0);
     }
     else
     {
@@ -581,6 +602,17 @@ void GasGasTransition::Step(Scalar delta)
     }
     m_links[newSourceIndex].outputThermalEnergy -= localKineticEnergyGain;
     Energy newLocalKineticEnergy =sign(newKineticEnergyDelta) * (kineticEnergySum + localKineticEnergyGain);
+
+
+    /*if(-m_links[newSourceIndex].outputThermalEnergy > sourceAvailableEnergy)
+    {
+        printf("source overtake\n");
+    }
+
+    if(-m_links[newDestinationIndex].outputThermalEnergy > destinationAvailableEnergy)
+    {
+        printf("destination overtake\n");
+    }*/
 
 
 /* Energy energyDiffUnchecked = newKineticEnergy - kineticEnergySum;
