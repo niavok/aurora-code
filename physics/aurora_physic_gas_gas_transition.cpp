@@ -252,7 +252,7 @@ void GasGasTransition::Step(Scalar delta)
             Quantity movingN = std::min(dN,sourceTotalUsableN);
 
             Scalar movingMass = movingN * pressureSourceNode.GetMolarMass();
-            kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef2 * viscosity * pressureSourceNode.GetTemperature() / pressureDestinationNode.GetTransitionLinks().size();
+            kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef * viscosity * pressureSourceNode.GetTemperature() / pressureDestinationNode.GetTransitionLinks().size();
             assert(!isnan(kineticAcceleration));
         }
 
@@ -296,7 +296,7 @@ void GasGasTransition::Step(Scalar delta)
 
 
         Scalar movingMass = movingN * pressureSourceNode.GetMolarMass();
-        kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef2;
+        kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef;
 #endif
     }
 
@@ -326,7 +326,7 @@ void GasGasTransition::Step(Scalar delta)
 
         Quantity sourceTotalN = sourceNode.GetN();
 
-        Quantity needTransfertNT = kineticEnergy / (sourceNode.GetMolarMass() * PhysicalConstants::kineticCoef2);
+        Quantity needTransfertNT = kineticEnergy / (sourceNode.GetMolarMass() * PhysicalConstants::kineticCoef);
         if(sourceTotalN > 0 && needTransfertNT > 0)
         {
             Quantity sourceTotalUsableN = sourceTotalN / (sourceNode.GetTransitionLinks().size() * 1.01);
@@ -339,7 +339,7 @@ void GasGasTransition::Step(Scalar delta)
             //Quantity sourceTotalUsableN = sourceTotalN / sourceNode.GetTransitionLinks().size();
 
             //Scalar pressureDeltaN = kineticEnergy / (PhysicalConstants::kineticCoef * sourceNode.GetTemperature());
-            //Scalar kineticDeltaNT = kineticEnergy / (sourceNode.GetMolarMass() * PhysicalConstants::kineticCoef2);
+            //Scalar kineticDeltaNT = kineticEnergy / (sourceNode.GetMolarMass() * PhysicalConstants::kineticCoef);
             //totalTransfertN = std::min(sourceTotalUsableN, Quantity(kineticDeltaN));
 
             //takenNRatio = totalTransfertN / sourceTotalUsableN;

@@ -47,10 +47,10 @@ void WorldEditor::GenerateTestWorld2()
 {
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
-    Mm tileSizeMm = 500;
+    Mm tileSizeMm = 50;
     int blockCountX = 80;
     int blockCountY = 80;
-    Level* surfaceLevel = m_world.CreateLevel(true, tileSizeMm, 0, blockCountX, blockCountY); // 20 x 20 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Level* surfaceLevel = m_world.CreateLevel(false, tileSizeMm, 0, blockCountX, blockCountY); // 20 x 20 blocks * 50 mm * 2^ 1 = 1 m x 1 m
 
 
     TileComposition dryAir;
@@ -61,8 +61,8 @@ void WorldEditor::GenerateTestWorld2()
     // Pressure 1 bar
     dryAir.Gas.composition[Gas::Nitrogen] = 80;
     dryAir.Gas.composition[Gas::Oxygen] = 20;
-    dryAir.Gas.pressure = 100000. ; // 1 bar
-    dryAir.Gas.temperature = 274.; // 0 degree C
+    dryAir.Gas.pressure = 100000.; // 1 bar
+    dryAir.Gas.temperature = 274. * 0.1; // 0 degree C
 
     TileComposition steam;
     // No solid
@@ -89,9 +89,9 @@ void WorldEditor::GenerateTestWorld2()
     //PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight / 6, surfaceWidth / 6,surfaceHeight /8));
 
     TileComposition highPressureDryAir = dryAir;
-    highPressureDryAir.Gas.pressure = 100000 * 1;
-    highPressureDryAir.Gas.temperature = 274.+5000;
-    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(surfaceWidth / 4, 2*surfaceHeight/3, surfaceHeight / 16, surfaceHeight / 16));
+    highPressureDryAir.Gas.pressure = 100000 * 200;
+    highPressureDryAir.Gas.temperature = 274.+500; 
+    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(surfaceWidth / 4, 2*surfaceHeight/3, surfaceHeight / 32, surfaceHeight / 32));
 }
 
 

@@ -275,7 +275,7 @@ void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 				break;
 			}
 
-			real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 0.001 * PhysicalConstants::kineticCoef2;
+			real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 0.001 * PhysicalConstants::kineticCoef;
 			real_t width = 1.f;
 			real_t maxLength = tile->GetSizeMm() * MmToGodot * 0.9;
 			if(length > maxLength)
