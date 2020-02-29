@@ -98,24 +98,10 @@ void GasGasTransition::Step(Scalar delta)
 
     Energy kineticEnergyDelta = initialKineticEnergyDelta;
 
-    // if(B.GetTemperature() > 150 || A.GetTemperature() > 150)
-    // {
-    //     char* plop;
-    //     plop = "hot\n";
-    // }
-
     Scalar pressureA = A.GetPressure() + A.GetPressureGradient() * linkA.altitudeRelativeToNode;
     Scalar pressureB = B.GetPressure() + B.GetPressureGradient() * linkB.altitudeRelativeToNode;
 
     Meter deltaAltitude = MmToMeter(B.GetAltitudeMm() - A.GetAltitudeMm());
-
-    //Scalar viscosity = 0.1;
-    Scalar viscosity = 0.99;
-
-    //Scalar pressureADeltaN = pressureA * m_section * viscosity;
-    //Scalar pressureBDeltaN = pressureB * m_section * viscosity;
-
-    //Quantity transfertN = MAX(0, abs(finalDeltaN));
 
     Scalar deltaMass = 0;
 
@@ -123,7 +109,6 @@ void GasGasTransition::Step(Scalar delta)
     float diffusionRatio = 0;
     // TODO
 
-    
 
     for(int sourceIndex = 0; sourceIndex < LinkCount; sourceIndex++)
     {
@@ -252,7 +237,7 @@ void GasGasTransition::Step(Scalar delta)
             Quantity movingN = std::min(dN,sourceTotalUsableN);
 
             Scalar movingMass = movingN * pressureSourceNode.GetMolarMass();
-            kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef * viscosity * pressureSourceNode.GetTemperature() / pressureDestinationNode.GetTransitionLinks().size();
+            kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef * PhysicalConstants::gasViscosity * pressureSourceNode.GetTemperature() / pressureDestinationNode.GetTransitionLinks().size();
             assert(!isnan(kineticAcceleration));
         }
 
@@ -474,10 +459,13 @@ void GasGasTransition::Step(Scalar delta)
 
 
     // Absorb or add kinetic energy from altitude change
-#if 0
+#if 1
+
+    Energy deltaPotentialEnergy = 0;
+
     if(deltaAltitude != 0)
     {
-        Energy deltaPotentialEnergy = -deltaAltitude * deltaMass * PhysicalConstants::gravity;
+        deltaPotentialEnergy = -deltaAltitude * deltaMass * PhysicalConstants::gravity * PhysicalConstants::potentialEnergyCoef;
 
         if(deltaPotentialEnergy != 0)
         {
@@ -491,11 +479,11 @@ void GasGasTransition::Step(Scalar delta)
                 // Kinetic energy in the opposite direction, remove as much acceleration as possible
                 if(abs(deltaPotentialEnergy) > abs(newKineticEnergyDelta))
                 {
-                    deltaPotentialEnergy += newKineticEnergyDelta;
+                    Energy thermalLoss = deltaPotentialEnergy + newKineticEnergyDelta;
                     newKineticEnergyDelta = 0;
 
                     // Take the remaining energy delta in the source node
-                    m_links[sourceIndex].outputThermalEnergy -= abs(deltaPotentialEnergy);
+                    m_links[sourceIndex].outputThermalEnergy -= abs(thermalLoss);
                 }
                 else
                 {
@@ -588,7 +576,7 @@ void GasGasTransition::Step(Scalar delta)
     // Take local energy to source
     Energy sourceAvailableEnergy = ComputeAvailableEnergy(newSourceIndex);
     Energy localKineticEnergyDiff = newLocalKineticEnergyUnchecked - kineticEnergySum;
-    Energy sourceEnergyBalance = sourceAvailableEnergy + m_links[newSourceIndex].outputThermalEnergy - localKineticEnergyDiff;
+    Energy sourceEnergyBalance = sourceAvailableEnergy + m_links[newSourceIndex].outputThermalEnergy - localKineticEnergyDiff + deltaPotentialEnergy;
 
     Energy localKineticEnergyGain;
     if(sourceEnergyBalance < 0)
@@ -600,7 +588,7 @@ void GasGasTransition::Step(Scalar delta)
     {
         localKineticEnergyGain = localKineticEnergyDiff;
     }
-    m_links[newSourceIndex].outputThermalEnergy -= localKineticEnergyGain;
+    m_links[newSourceIndex].outputThermalEnergy -= (localKineticEnergyGain - deltaPotentialEnergy);
     Energy newLocalKineticEnergy =sign(newKineticEnergyDelta) * (kineticEnergySum + localKineticEnergyGain);
 
 
@@ -674,6 +662,7 @@ void GasGasTransition::Step(Scalar delta)
 
 
     Energy finalCheckEnergy = abs(newLocalKineticEnergy);
+    finalCheckEnergy -= deltaPotentialEnergy; // The potential energy is exchanged from external
     for(int i = 0; i < LinkCount; i++)
     {
         finalCheckEnergy += m_links[i].outputThermalEnergy;

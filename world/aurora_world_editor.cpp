@@ -47,7 +47,7 @@ void WorldEditor::GenerateTestWorld2()
 {
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
-    Mm tileSizeMm = 50;
+    Mm tileSizeMm = 500;
     int blockCountX = 80;
     int blockCountY = 80;
     Level* surfaceLevel = m_world.CreateLevel(false, tileSizeMm, 0, blockCountX, blockCountY); // 20 x 20 blocks * 50 mm * 2^ 1 = 1 m x 1 m

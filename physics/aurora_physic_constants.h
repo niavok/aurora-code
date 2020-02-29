@@ -11,6 +11,8 @@ public:
     static constexpr Scalar gravity = 9.81; // m.s-2, Acceleration of the gravity
     static constexpr Scalar gasConstant = 8.31446261815325; // Gas contant for mol J.mol-1.K-1
     static constexpr Scalar kineticCoef = 1; // Energy of a mass moving througth a transition
+    static constexpr Scalar potentialEnergyCoef = 0.01 /* * 4*/; // Energy of a mass moving througth a transition
+    static constexpr Scalar gasViscosity = 0.99;
 
     static void Init();
 
