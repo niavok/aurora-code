@@ -13,6 +13,7 @@ public:
     static constexpr Scalar kineticCoef = 1; // Energy of a mass moving througth a transition
     static constexpr Scalar potentialEnergyCoef = 0.01 /* * 4*/; // Energy of a mass moving througth a transition
     static constexpr Scalar gasViscosity = 0.99;
+    static constexpr Scalar gasKineticLossRatio = 0.0001;
 
     static void Init();
 

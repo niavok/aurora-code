@@ -46,38 +46,7 @@ void GasGasTransition::ApplyInput()
 
 void GasGasTransition::Step(Scalar delta)
 {
-    //TODO dt
-
-    // For each tile
-    // Propagate Ec to from A Ec
-    
-    // For each transition
-    // add all Ec to current Ec
-    // compute delta pressure and pressure dp
-    // compute dp from Ec
-    // compute total dp before friction
-    // compute velocity square
-    // compute friction lost
-    // compute final need dp
-    // commit dp, energy ejection
-
-
-    // For each tile
-    // add N, add E lost or gain
-
-
-
-
-    //while negative N or E ask to all transitions some maters and energy
-    // add negative tile to a liste and propagate until all tiles are ok
-
-
-
-    // TODO no sqrt ?
-
-    // Get energy propagation
-
-    NodeLink& linkA = m_links[0];
+     NodeLink& linkA = m_links[0];
     NodeLink& linkB = m_links[1];
     GasNode& A = *((GasNode*) linkA.node);
     GasNode& B = *((GasNode*) linkB.node);
@@ -105,64 +74,18 @@ void GasGasTransition::Step(Scalar delta)
 
     Scalar deltaMass = 0;
 
-#if 0
-    float diffusionRatio = 0;
-    // TODO
-
-
-    for(int sourceIndex = 0; sourceIndex < LinkCount; sourceIndex++)
-    {
-        NodeLink& link = m_links[sourceIndex];
-        GasNode& sourceNode = *((GasNode*) link.node);
-        int destinationIndex = 1 -sourceIndex;
-
-        Scalar pressure = sourceNode.GetPressure() + sourceNode.GetPressureGradient() * link.altitudeRelativeToNode;
-        Scalar pressureDeltaN = diffusionRatio * pressure * m_section * viscosity / sourceNode.GetTemperature();
-
-        Quantity sourceTotalN = sourceNode.GetN();
-        Quantity transfertN = Quantity(pressureDeltaN);
-
-
-        if(transfertN > 0)
-        {
-
-            for(Gas gas : AllGas())
-            //for(size_t gazIndex = 0; gazIndex < GasCount; gazIndex++)
-            {
-                // TODO diffusion
-                Scalar compositionRatio = Scalar(sourceNode.GetN(gas)) / Scalar(sourceTotalN);
-                Quantity quantity = Quantity(transfertN * compositionRatio);
-                m_links[sourceIndex].outputMaterial[gas] -= quantity;
-                m_links[destinationIndex].outputMaterial[gas] += quantity;
-
-                Scalar mass = quantity * PhysicalConstants::GetMassByN(gas);
-                deltaMass += mass;
-            }
-
-            // Take energy ratio
-            Scalar takenRatio = Scalar(transfertN) / sourceTotalN;
-            Energy takenEnergy = Energy(takenRatio * sourceNode.GetEnergy());
-            m_links[sourceIndex].outputThermalEnergy -= takenEnergy;
-            m_links[destinationIndex].outputThermalEnergy += takenEnergy;
-        }
-    }
-#endif
-
     // Apply pressure acceleration
     Scalar kineticAcceleration = 0;
     {
         size_t pressureSourceIndex;
         Scalar pressureDiff = pressureA - pressureB;
-        Scalar sourcePressure;
         if(pressureDiff > 0)
         {
             pressureSourceIndex = 0;
-            sourcePressure = pressureA;
         }
         else
         {
             pressureSourceIndex = 1;
-            sourcePressure = pressureB;
         }
 
         if(deltaAltitude == 0)
@@ -178,17 +101,6 @@ void GasGasTransition::Step(Scalar delta)
         // Proto
         Scalar sourceN0 = pressureSourceNode.GetN() - movingRatio * pressureSourceNode.GetMovingN();
 
-        if(pressureSourceNode.GetTemperature() == 0 && pressureDestinationNode.GetTemperature())
-        {
-            printf("both t 0\n");
-        }
-
-         if(pressureSourceNode.GetTemperature() == 0)
-        {
-            printf("source t 0\n");
-        }
-
-
         if(sourceN0 > 1e-15 && pressureSourceNode.GetEnergy() > 0)
         {
             Energy sourceE0 = pressureSourceNode.GetEnergy() * sourceN0 / pressureSourceNode.GetN();
@@ -201,11 +113,6 @@ void GasGasTransition::Step(Scalar delta)
             Scalar destinationMolarMass = pressureDestinationNode.GetMolarMass();
             Scalar destinationMolarHeatCapacity = destinationN0 > 0 ? pressureDestinationNode.GetEnergyPerK() / pressureDestinationNode.GetN() : sourceMolarHeatCapacity;
             Scalar destinationDh = m_links[1-pressureSourceIndex].altitudeRelativeToNode;
-
-            if(destinationE0 == 0)
-            {
-                printf("plop\n");
-            }
 
             Volume sourceVolume = pressureSourceNode.GetVolume();
             Volume destinationVolume = pressureDestinationNode.GetVolume();
@@ -240,52 +147,8 @@ void GasGasTransition::Step(Scalar delta)
             kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef * PhysicalConstants::gasViscosity * pressureSourceNode.GetTemperature() / pressureDestinationNode.GetTransitionLinks().size();
             assert(!isnan(kineticAcceleration));
         }
-
-#if 0
-        Scalar APressureN = A.GetN() - A.GetMovingN();
-        Scalar BPressureN = B.GetN() - B.GetMovingN();
-
-
-
-        Scalar joinPressureN = APressureN + BPressureN;
-        Volume joinVolume = A.GetVolume() + B.GetVolume();
-        Scalar joinMass = APressureN * A.GetMolarMass() + BPressureN * B.GetMolarMass();
-
-        Energy totalEnergyPerK = A.GetEnergyPerK() +B.GetEnergyPerK();
-        Energy totalThermalEnergy = A.GetThermalEnergy() +B.GetThermalEnergy();
-        if(totalThermalEnergy < 0)
-        {
-            totalThermalEnergy = 0;
-        }
-
-        Scalar joinTemperature = totalThermalEnergy / totalEnergyPerK;
-
-        Scalar joinPressureNoGravity = PhysicalConstants::ComputePressure(joinPressureN, joinVolume, joinTemperature);
-
-        Scalar altitudeRelativeToNode = (deltaAltitude > 0 ? linkB.altitudeRelativeToNode : linkA.altitudeRelativeToNode);
-
-        Scalar density = Scalar(joinMass) / joinVolume;
-        Scalar pressureGradient = density *  PhysicalConstants::gravity;
-
-        Scalar joinPressureAtTransition = joinPressureNoGravity + altitudeRelativeToNode * pressureGradient;
-
-
-        // This is the target pressure, compute the ratio of N needed to match the pressure
-
-        Scalar equilibriumRatio = 1 - (joinPressureAtTransition / sourcePressure);
-
-        Quantity sourceTotalN = pressureSourceNode.GetN();
-        Quantity sourceTotalUsableN = sourceTotalN / pressureSourceNode.GetTransitionLinks().size();
-
-        Quantity movingN = equilibriumRatio * sourceTotalUsableN;
-
-
-        Scalar movingMass = movingN * pressureSourceNode.GetMolarMass();
-        kineticAcceleration = sign(pressureDiff) * movingMass * PhysicalConstants::kineticCoef;
-#endif
     }
 
-    //Scalar kineticAcceleration = pressureDiff * m_section * viscosity * PhysicalConstants::kineticCoef;
     Energy newKineticEnergyDelta = kineticEnergyDelta + kineticAcceleration;
 
     size_t sourceIndex;
@@ -300,7 +163,6 @@ void GasGasTransition::Step(Scalar delta)
         sourceIndex = 1;
         destinationIndex = 0;
     }
-
 
     Energy kineticEnergy = abs(newKineticEnergyDelta);
     Scalar takenNRatio = 0;
@@ -317,22 +179,6 @@ void GasGasTransition::Step(Scalar delta)
             Quantity sourceTotalUsableN = sourceTotalN / (sourceNode.GetTransitionLinks().size() * 1.01);
             Energy sourceTotalUsableEnergy = sourceNode.GetEnergy() / (sourceNode.GetTransitionLinks().size() * 1.01);
 
-
-
-
-
-            //Quantity sourceTotalUsableN = sourceTotalN / sourceNode.GetTransitionLinks().size();
-
-            //Scalar pressureDeltaN = kineticEnergy / (PhysicalConstants::kineticCoef * sourceNode.GetTemperature());
-            //Scalar kineticDeltaNT = kineticEnergy / (sourceNode.GetMolarMass() * PhysicalConstants::kineticCoef);
-            //totalTransfertN = std::min(sourceTotalUsableN, Quantity(kineticDeltaN));
-
-            //takenNRatio = totalTransfertN / sourceTotalUsableN;
-       /* }
-
-
-        if(totalTransfertN > 0)
-        {*/
             auto TakeComposition = [&](bool useOutput, Quantity transfertN, Quantity totalN)
             {
                 if(transfertN == 0)
@@ -390,7 +236,6 @@ void GasGasTransition::Step(Scalar delta)
             {
                 Quantity needTransfertNAtOutputTemperature = needTransfertNT / sourceOutputTemperature;
 
-                //Quantity needOutputTransfertN = std::min(needTransfertNAtOutputTemperature, sourceTotalOutputN);
                 Quantity needOutputTransfertN = needTransfertNAtOutputTemperature;
                 if(needOutputTransfertN > sourceTotalOutputN)
                 {
@@ -398,8 +243,6 @@ void GasGasTransition::Step(Scalar delta)
                     needInput = true;
                 }
 
-
-                //Quantity outputTransfertN = std::min(needOutputTransfertN, sourceTotalUsableN);
                 Quantity outputTransfertN = needOutputTransfertN;
                 if(outputTransfertN > sourceTotalUsableN)
                 {
@@ -459,8 +302,6 @@ void GasGasTransition::Step(Scalar delta)
 
 
     // Absorb or add kinetic energy from altitude change
-#if 1
-
     Energy deltaPotentialEnergy = 0;
 
     if(deltaAltitude != 0)
@@ -492,17 +333,12 @@ void GasGasTransition::Step(Scalar delta)
             }
         }
     }
-#endif
 
     assert(m_links[sourceIndex].outputKineticEnergy == 0);
 
-    /*// Apply pressure acceleration
-    Scalar pressureDiff = pressureA - pressureB;
-    Scalar kineticAcceleration = pressureDiff * m_section * viscosity * KineticCoef;
-    Energy newKineticEnergyDelta = kineticEnergyDelta + kineticAcceleration;*/
+    // Apply pressure acceleration
     size_t newSourceIndex;
     size_t newDestinationIndex;
-    //TODO energy dissipation
 
     if(newKineticEnergyDelta > 0)
     {
@@ -516,38 +352,19 @@ void GasGasTransition::Step(Scalar delta)
 
     Energy newKineticEnergyBeforeLoss = abs(newKineticEnergyDelta);
 
-    Scalar lossRatio = 0.0001;
+    Scalar kineticLossRatio = PhysicalConstants::gasKineticLossRatio;
 
     if(takenNRatio == 0)
     {
-        lossRatio = 1;
+        kineticLossRatio = 1;
     }
 
-    Energy thermalLoss = newKineticEnergyBeforeLoss * lossRatio; // TODO make depend on context
+    Energy thermalLoss = newKineticEnergyBeforeLoss * kineticLossRatio; // TODO make depend on section/material/context
     Energy newKineticEnergy = newKineticEnergyBeforeLoss - thermalLoss;
     assert(abs(newKineticEnergy) <= abs(newKineticEnergyDelta));
 
-   /* Energy energyDiffUnchecked = newKineticEnergy - kineticEnergySum;
-
-    Energy energyDiff;
-    if(energyDiffUnchecked > 0)
-    {
-        // Check if there is enought energy available
-
-
-
-    }
-    else
-    {
-        energyDiff = energyDiffUnchecked;
-    }*/
-
-    //GasNode& sourceNode = *((GasNode*) m_links[sourceIndex].node);
-    // TODO, use the ratio from the N / transition count
-
     Scalar kineticPropagationRatio = takenNRatio;
     Energy transmitedKineticEnergyUnchecked = newKineticEnergy * kineticPropagationRatio;
-    //Energy newLocalKineticEnergyUnchecked = sign(newKineticEnergyDelta) * (newKineticEnergy - transmitedKineticEnergyUnchecked);
     Energy newLocalKineticEnergyUnchecked = newKineticEnergy - transmitedKineticEnergyUnchecked;
 
     auto ComputeAvailableEnergy = [&](int index)
@@ -564,7 +381,6 @@ void GasGasTransition::Step(Scalar delta)
     if(destinationEnergyBalance < 0)
     {
         transmitedKineticEnergy = transmitedKineticEnergyUnchecked + destinationEnergyBalance;
-        //assert(transmitedKineticEnergy >= 0);
     }
     else
     {
@@ -582,7 +398,6 @@ void GasGasTransition::Step(Scalar delta)
     if(sourceEnergyBalance < 0)
     {
         localKineticEnergyGain = localKineticEnergyDiff + sourceEnergyBalance;
-        //assert(localKineticEnergyGain >= 0);
     }
     else
     {
@@ -590,76 +405,6 @@ void GasGasTransition::Step(Scalar delta)
     }
     m_links[newSourceIndex].outputThermalEnergy -= (localKineticEnergyGain - deltaPotentialEnergy);
     Energy newLocalKineticEnergy =sign(newKineticEnergyDelta) * (kineticEnergySum + localKineticEnergyGain);
-
-
-    /*if(-m_links[newSourceIndex].outputThermalEnergy > sourceAvailableEnergy)
-    {
-        printf("source overtake\n");
-    }
-
-    if(-m_links[newDestinationIndex].outputThermalEnergy > destinationAvailableEnergy)
-    {
-        printf("destination overtake\n");
-    }*/
-
-
-/* Energy energyDiffUnchecked = newKineticEnergy - kineticEnergySum;
-
-   
-    
-    
-
-
-    
-
-    Energy sourceEnergyDiff =  energyDiff /2;
-    Energy destinationEnergyDiff =  energyDiff - sourceEnergyDiff;
-
-    /*if(energyDiff < 0)
-    {
-        m_links[newSourceIndex].outputThermalEnergy -= energyDiff;
-    }
-    else
-    {
-        m_links[newDestinationIndex].outputThermalEnergy -= energyDiff;
-    }*/
-
-    //m_links[newSourceIndex].outputThermalEnergy -= sourceEnergyDiff;
-    //m_links[newDestinationIndex].outputThermalEnergy -= destinationEnergyDiff;
-
-    // Max output energy
-  /*  auto ComputeEnergyOvertake = [&](int index)
-    {
-        GasNode& node = *((GasNode*) m_links[index].node);
-        Energy maxUsableEnergy = node.GetEnergy() / (node.GetTransitionLinks().size() * 0.01);
-
-        Energy energyDelta = maxUsableEnergy  + m_links[newSourceIndex].outputThermalEnergy;
-
-        return -energyDelta;
-    };
-
-    Energy sourceOvertake = ComputeEnergyOvertake(newSourceIndex);
-    Energy destinationOvertake = ComputeEnergyOvertake(newDestinationIndex);
-
-    Energy kineticEnergyAfterOvertake = newLocalKineticEnergy;
-
-    if(sourceOvertake < 0)
-    {
-        m_links[newSourceIndex].outputThermalEnergy += sourceOvertake;
-    }
-
-    m_links[newSourceIndex].node->GetEnergy()*/
-
-/*
-    if(energyDiff > 0)
-    {
-        m_links[newSourceIndex].outputThermalEnergy -= energyDiff;
-    }
-    else
-    {
-        m_links[newDestinationIndex].outputThermalEnergy -= energyDiff;
-    }*/
-
 
     Energy finalCheckEnergy = abs(newLocalKineticEnergy);
     finalCheckEnergy -= deltaPotentialEnergy; // The potential energy is exchanged from external
@@ -670,7 +415,6 @@ void GasGasTransition::Step(Scalar delta)
         assert(m_links[i].inputKineticEnergy == 0);
     }
 
-// TODO check with potential energy
     Energy energyCheckError = initialCheckEnergy - finalCheckEnergy;
     assert(std::abs(energyCheckError) < 1e-8);
 
