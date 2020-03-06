@@ -340,10 +340,10 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
             auto PressureToColor = [](Scalar pressure)
             {
-                Scalar const minPressure = 16000;
-                Scalar const maxPressure = 300000;
-				//Scalar const minPressure = 99900;
-                //Scalar const maxPressure = 100100;
+                //Scalar const minPressure = 16000;
+                //Scalar const maxPressure = 300000;
+				Scalar const minPressure = 99900;
+                Scalar const maxPressure = 100100;
 
                 return float((pressure-minPressure) / (maxPressure - minPressure));
 				//return 0;

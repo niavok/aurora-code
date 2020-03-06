@@ -312,13 +312,13 @@ void GasGasTransition::Step(Scalar delta)
         {
             if(newKineticEnergyDelta * deltaPotentialEnergy > 0)
             {
-                // Kinetic energy in the right direction, accelerate
-                newKineticEnergyDelta += deltaPotentialEnergy;
+                // Kinetic energy in the right direction, it's free
+                //newKineticEnergyDelta += deltaPotentialEnergy;
             }
             else
             {
                 // Kinetic energy in the opposite direction, remove as much acceleration as possible
-                if(abs(deltaPotentialEnergy) > abs(newKineticEnergyDelta))
+                /*if(abs(deltaPotentialEnergy) > abs(newKineticEnergyDelta))
                 {
                     Energy thermalLoss = deltaPotentialEnergy + newKineticEnergyDelta;
                     newKineticEnergyDelta = 0;
@@ -329,7 +329,7 @@ void GasGasTransition::Step(Scalar delta)
                 else
                 {
                     newKineticEnergyDelta += deltaPotentialEnergy;
-                }
+                }*/
             }
         }
     }

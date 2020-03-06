@@ -62,7 +62,7 @@ void WorldEditor::GenerateTestWorld2()
     dryAir.Gas.composition[Gas::Nitrogen] = 80;
     dryAir.Gas.composition[Gas::Oxygen] = 20;
     dryAir.Gas.pressure = 100000.; // 1 bar
-    dryAir.Gas.temperature = 274. * 0.1; // 0 degree C
+    dryAir.Gas.temperature = 274.; // 0 degree C
 
     TileComposition steam;
     // No solid
@@ -89,9 +89,10 @@ void WorldEditor::GenerateTestWorld2()
     //PaintTiles(surfaceLevel, hotDryAir,  MmRect(surfaceWidth / 4, surfaceHeight - surfaceHeight / 6, surfaceWidth / 6,surfaceHeight /8));
 
     TileComposition highPressureDryAir = dryAir;
-    highPressureDryAir.Gas.pressure = 100000 * 200;
-    highPressureDryAir.Gas.temperature = 274.+500; 
-    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(surfaceWidth / 4, 2*surfaceHeight/3, surfaceHeight / 32, surfaceHeight / 32));
+    highPressureDryAir.Gas.pressure = 100000 * 1;
+    highPressureDryAir.Gas.temperature = 274.+500*10; 
+    //PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(surfaceWidth / 4, 2*surfaceHeight/3, surfaceHeight / 4, surfaceHeight / 4));
+    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(0, 3*surfaceHeight/4, surfaceWidth-5* tileSizeMm, surfaceHeight / 4));
 }
 
 
