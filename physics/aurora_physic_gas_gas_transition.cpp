@@ -19,7 +19,7 @@ GasGasTransition::GasGasTransition(GasGasTransition::Config const& config)
 
     for(int i = 0; i < LinkCount; i++)
     {
-        m_links[i].outputThermalEnergy = 0;
+        m_links[i].outputInternalEnergy = 0;
         m_links[i].inputKineticEnergy = 0;
         m_links[i].outputKineticEnergy = 0;
 
@@ -59,7 +59,7 @@ void GasGasTransition::Step(Scalar delta)
     for(int i = 0; i < LinkCount; i++)
     {
         assert(m_links[i].inputKineticEnergy == 0);
-        assert(m_links[i].outputThermalEnergy == 0);
+        assert(m_links[i].outputInternalEnergy == 0);
         assert(m_links[i].outputKineticEnergy == 0);
     }
 
@@ -101,15 +101,15 @@ void GasGasTransition::Step(Scalar delta)
         // Proto
         Scalar sourceN0 = pressureSourceNode.GetN() - movingRatio * pressureSourceNode.GetMovingN();
 
-        if(sourceN0 > 1e-15 && pressureSourceNode.GetEnergy() > 0)
+        if(sourceN0 > 1e-15 && pressureSourceNode.GetThermalEnergy() > 0)
         {
-            Energy sourceE0 = pressureSourceNode.GetEnergy() * sourceN0 / pressureSourceNode.GetN();
+            Energy sourceE0 = pressureSourceNode.GetThermalEnergy() * sourceN0 / pressureSourceNode.GetN();
             Scalar sourceMolarMass = pressureSourceNode.GetMolarMass();
             Scalar sourceMolarHeatCapacity = pressureSourceNode.GetEnergyPerK() / pressureSourceNode.GetN();
             Scalar sourceDh = m_links[pressureSourceIndex].altitudeRelativeToNode;
 
             Scalar destinationN0 = pressureDestinationNode.GetN() - movingRatio * pressureDestinationNode.GetMovingN();
-            Energy destinationE0 = destinationN0 > 0 ? pressureDestinationNode.GetEnergy() * destinationN0 / pressureDestinationNode.GetN() : 0;
+            Energy destinationE0 = destinationN0 > 0 ? pressureDestinationNode.GetThermalEnergy() * destinationN0 / pressureDestinationNode.GetN() : 0;
             Scalar destinationMolarMass = pressureDestinationNode.GetMolarMass();
             Scalar destinationMolarHeatCapacity = destinationN0 > 0 ? pressureDestinationNode.GetEnergyPerK() / pressureDestinationNode.GetN() : sourceMolarHeatCapacity;
             Scalar destinationDh = m_links[1-pressureSourceIndex].altitudeRelativeToNode;
@@ -177,7 +177,7 @@ void GasGasTransition::Step(Scalar delta)
         if(sourceTotalN > 0 && needTransfertNT > 0)
         {
             Quantity sourceTotalUsableN = sourceTotalN / (sourceNode.GetTransitionLinks().size() * 1.01);
-            Energy sourceTotalUsableEnergy = sourceNode.GetEnergy() / (sourceNode.GetTransitionLinks().size() * 1.01);
+            Energy sourceTotalUsableEnergy = sourceNode.GetInternalEnergy() / (sourceNode.GetTransitionLinks().size() * 1.01);
 
             auto TakeComposition = [&](bool useOutput, Quantity transfertN, Quantity totalN)
             {
@@ -221,8 +221,8 @@ void GasGasTransition::Step(Scalar delta)
                 // Take energy ratio
                 Scalar takenRatio = Scalar(transfertN) / totalN;
                 Energy takenEnergy = Energy(takenRatio * energy);
-                m_links[sourceIndex].outputThermalEnergy -= takenEnergy;
-                m_links[destinationIndex].outputThermalEnergy += takenEnergy;
+                m_links[sourceIndex].outputInternalEnergy -= takenEnergy;
+                m_links[destinationIndex].outputInternalEnergy += takenEnergy;
             };
 
             Quantity takenN = 0;
@@ -370,12 +370,12 @@ void GasGasTransition::Step(Scalar delta)
     auto ComputeAvailableEnergy = [&](int index)
     {
         GasNode& node = *((GasNode*) m_links[index].node);
-        return node.GetEnergy() / (node.GetTransitionLinks().size() * 1.01);
+        return node.GetInternalEnergy() / (node.GetTransitionLinks().size() * 1.01);
     };
 
     // Take transmited energy to destination
     Energy destinationAvailableEnergy = ComputeAvailableEnergy(newDestinationIndex);
-    Energy destinationEnergyBalance = destinationAvailableEnergy + m_links[newDestinationIndex].outputThermalEnergy - transmitedKineticEnergyUnchecked;
+    Energy destinationEnergyBalance = destinationAvailableEnergy + m_links[newDestinationIndex].outputInternalEnergy - transmitedKineticEnergyUnchecked;
 
     Energy transmitedKineticEnergy;
     if(destinationEnergyBalance < 0)
@@ -386,13 +386,13 @@ void GasGasTransition::Step(Scalar delta)
     {
         transmitedKineticEnergy = transmitedKineticEnergyUnchecked;
     }
-    m_links[newDestinationIndex].outputThermalEnergy -= transmitedKineticEnergy;
+    m_links[newDestinationIndex].outputInternalEnergy -= transmitedKineticEnergy;
     m_links[newDestinationIndex].outputKineticEnergy = transmitedKineticEnergy;
 
     // Take local energy to source
     Energy sourceAvailableEnergy = ComputeAvailableEnergy(newSourceIndex);
     Energy localKineticEnergyDiff = newLocalKineticEnergyUnchecked - kineticEnergySum;
-    Energy sourceEnergyBalance = sourceAvailableEnergy + m_links[newSourceIndex].outputThermalEnergy - localKineticEnergyDiff + deltaPotentialEnergy;
+    Energy sourceEnergyBalance = sourceAvailableEnergy + m_links[newSourceIndex].outputInternalEnergy - localKineticEnergyDiff + deltaPotentialEnergy;
 
     Energy localKineticEnergyGain;
     if(sourceEnergyBalance < 0)
@@ -403,14 +403,14 @@ void GasGasTransition::Step(Scalar delta)
     {
         localKineticEnergyGain = localKineticEnergyDiff;
     }
-    m_links[newSourceIndex].outputThermalEnergy -= (localKineticEnergyGain - deltaPotentialEnergy);
+    m_links[newSourceIndex].outputInternalEnergy -= (localKineticEnergyGain - deltaPotentialEnergy);
     Energy newLocalKineticEnergy =sign(newKineticEnergyDelta) * (kineticEnergySum + localKineticEnergyGain);
 
     Energy finalCheckEnergy = abs(newLocalKineticEnergy);
     finalCheckEnergy -= deltaPotentialEnergy; // The potential energy is exchanged from external
     for(int i = 0; i < LinkCount; i++)
     {
-        finalCheckEnergy += m_links[i].outputThermalEnergy;
+        finalCheckEnergy += m_links[i].outputInternalEnergy;
         finalCheckEnergy += m_links[i].outputKineticEnergy;
         assert(m_links[i].inputKineticEnergy == 0);
     }

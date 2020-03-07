@@ -82,7 +82,7 @@ public:
         Energy inputKineticEnergy;
 
         // Ouput
-        Energy outputThermalEnergy;
+        Energy outputInternalEnergy;
         Energy outputKineticEnergy;
         GasComposition outputMaterial;
     };

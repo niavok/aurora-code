@@ -57,7 +57,7 @@ void PhysicEngine::Step(Scalar delta)
     Quantity initialTotalN = 0;
     for(FluidNode* node : m_nodes)
     {
-       // initialTotalEnergy += node->GetCheckEnergy();
+       // initialTotalEnergy += node->GetInternalEnergy();
         initialTotalN += node->GetCheckN();
     }
 
@@ -119,7 +119,7 @@ void PhysicEngine::SubStep(Scalar delta)
     __int128 initialTotalN = 0;
     for(FluidNode* node : m_nodes)
     {
-       // initialTotalEnergy += node->GetCheckEnergy();
+       // initialTotalEnergy += node->GetInternalEnergy();
         initialTotalN += node->GetCheckN();
     }
 
@@ -162,10 +162,10 @@ Energy PhysicEngine::ComputeEnergy(const char* label)
     Energy energy = 0;
     for(FluidNode* node : m_nodes)
     {
-        energy += node->GetCheckEnergy();
-        if(node->GetCheckEnergy() < 0)
+        energy += node->GetInternalEnergy();
+        if(node->GetInternalEnergy() < 0)
         {
-                printf("Node %p e=%g (%s)\n", node, node->GetCheckEnergy(), sprintf_int128(energy));
+                printf("Node %p e=%g (%s)\n", node, node->GetInternalEnergy(), sprintf_int128(energy));
         }
     }
 
@@ -178,14 +178,14 @@ Energy PhysicEngine::ComputeEnergy(const char* label)
             assert(transition->GetNodeLink(i)->inputKineticEnergy >= 0);
 
             energy += transition->GetNodeLink(i)->inputKineticEnergy;
-            energy += transition->GetNodeLink(i)->outputThermalEnergy;
+            energy += transition->GetNodeLink(i)->outputInternalEnergy;
             energy += transition->GetNodeLink(i)->outputKineticEnergy;
 
             if(energy < 0)
         {
                 printf("Transition inputKineticEnergy=%g outputThermalEnergy=%g outputKineticEnergy=%g (%s)\n",
                 transition->GetNodeLink(i)->inputKineticEnergy,
-                transition->GetNodeLink(i)->outputThermalEnergy,
+                transition->GetNodeLink(i)->outputInternalEnergy,
                 transition->GetNodeLink(i)->outputKineticEnergy, sprintf_int128(energy));
         }
         }

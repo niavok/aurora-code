@@ -93,7 +93,7 @@ public:
     void AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Energy thermalEnergy);
 
 
-    void AddGas(Gas gas, Quantity N, Energy thermalEnergy);
+    void AddGas(Gas gas, Quantity N, Energy internalEnergy);
 
 
 //    void ClearContent();

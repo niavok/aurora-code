@@ -369,10 +369,10 @@ void TileContent::AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Ener
     UpdateVolumes();
 }
 
-void TileContent::AddGas(Gas gas, Quantity N, Energy thermalEnergy)
+void TileContent::AddGas(Gas gas, Quantity N, Energy internalEnergy)
 {
     m_gasNode.AddN(gas, N);
-    m_gasNode.AddThermalEnergy(thermalEnergy);
+    m_gasNode.AddInternalEnergy(internalEnergy);
 
     UpdateVolumes();
 }
@@ -572,8 +572,8 @@ TileContent TileContent::TakeProportion(int proportion)
         tileProportion.m_gasNode.AddN(gas, quantityToTake);
     }
 
-    Energy thermalEnergyToTake = m_gasNode.GetThermalEnergy() / proportion;
-    tileProportion.m_gasNode.AddThermalEnergy(thermalEnergyToTake);
+    Energy internalEnergyToTake = m_gasNode.GetInternalEnergy() / proportion;
+    tileProportion.m_gasNode.AddInternalEnergy(internalEnergyToTake);
 
     // Clean
     for (Solid solidToRemove : solidsToRemove)

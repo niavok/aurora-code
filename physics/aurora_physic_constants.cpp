@@ -274,9 +274,12 @@ Volume PhysicalConstants::GetLiquidVolumeByN(Liquid material, Quantity N, Scalar
 }
 
 
-Energy PhysicalConstants::EstimateThermalEnergy(Gas material, Quantity N, Scalar temperature)
+Energy PhysicalConstants::EstimateInternalEnergy(Gas material, Quantity N, Scalar temperature, Scalar volume)
 {
-    return Energy(gasSpecifHeat[material] * gasMassByMole[material] * N * temperature);
+    Scalar pressure = ComputeGasPressure(N, volume, temperature);
+    Energy elasticEnergy = pressure * volume * PhysicalConstants::gasElasticCoef;
+    Energy thermalEnergy = gasSpecifHeat[material] * gasMassByMole[material] * N * temperature;
+    return thermalEnergy + elasticEnergy;
 }
 
 Quantity PhysicalConstants::EstimateGasN(Volume volume, Scalar pressure, Scalar temperature)
@@ -287,10 +290,12 @@ Quantity PhysicalConstants::EstimateGasN(Volume volume, Scalar pressure, Scalar 
     return N;
 }
 
-Scalar PhysicalConstants::ComputePressure(Quantity N, Volume volume, Scalar temperature)
+Scalar PhysicalConstants::ComputeGasPressure(Quantity N, Volume volume, Scalar temperature)
 {
     return N * PhysicalConstants::gasConstant * temperature / volume;
 }
+
+
 
 // Material PhysicalConstants::GetDissolvedMaterial(Material material)
 // {

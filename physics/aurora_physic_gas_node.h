@@ -18,15 +18,16 @@ public:
     Quantity GetN(Gas gas) const;
     Quantity GetInputN(Gas gas) const;
     Quantity GetOutputN(Gas gas) const;
-    Energy GetThermalEnergy() const;
-    
+
     void AddN(Gas gas, Quantity N);
-    void AddThermalEnergy(Energy thermalEnergy);
+    //void AddThermalEnergy(Energy thermalEnergy);
+    void AddInternalEnergy(Energy internalEnergy);
 
 
 
     //void TakeN(Gas gas, Quantity N);
-    void TakeThermalEnergy(Energy thermalEnergy);
+    //void TakeThermalEnergy(Energy thermalEnergy);
+    void TakeInternalEnergy(Energy internalEnergy);
 
     Scalar GetPressure() const;
     Scalar GetTemperature() const;
@@ -39,10 +40,10 @@ public:
     Quantity GetInputN() const;
 
 
-    Energy GetEnergy() const;
+    Energy GetInternalEnergy() const;
+    Energy GetThermalEnergy() const;
     Energy GetOutputEnergy() const;
     Energy GetInputEnergy() const;
-    Energy GetCheckEnergy() const { return m_inputThermalEnergy + m_outputThermalEnergy; }
     Energy GetEnergyPerK() const { return m_cacheEnergyPerK; }
     Quantity GetCheckN() const { return m_cacheCheckN; }
     Scalar GetMolarMass() const { return m_cacheMolarMass; }
@@ -75,8 +76,8 @@ private:
 
     GasComposition m_inputNComposition;
     GasComposition m_outputNComposition;
-    Energy m_inputThermalEnergy;
-    Energy m_outputThermalEnergy;
+    Energy m_inputInternalEnergy;
+    Energy m_outputInternalEnergy;
     Quantity m_movingN;
 
     // Cache
@@ -93,6 +94,7 @@ private:
     Scalar m_cacheOutputTemperature;
     Scalar m_cacheEnergyPerK;
     Scalar m_cacheMolarMass;
+    Scalar m_cacheThermalEnergyRatio;
 };
 
 }

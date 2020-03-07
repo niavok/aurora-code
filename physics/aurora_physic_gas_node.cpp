@@ -11,8 +11,8 @@ namespace aurora {
 GasNode::GasNode()
     : m_altitude(0)
     , m_volume(0)
-    , m_inputThermalEnergy(0)
-    , m_outputThermalEnergy(0)
+    , m_inputInternalEnergy(0)
+    , m_outputInternalEnergy(0)
     , m_movingN(0)
 {
     for(Gas gas : AllGas())
@@ -25,8 +25,8 @@ GasNode::GasNode()
 GasNode::GasNode(GasNode& node)
     : m_altitude(node.m_altitude)
     , m_volume(node.m_volume)
-    , m_inputThermalEnergy(node.m_inputThermalEnergy)
-    , m_outputThermalEnergy(node.m_outputThermalEnergy)
+    , m_inputInternalEnergy(node.m_inputInternalEnergy)
+    , m_outputInternalEnergy(node.m_outputInternalEnergy)
     , m_movingN(node.m_movingN)
     , m_cacheComputed(false)
 {
@@ -60,31 +60,15 @@ void GasNode::AddN(Gas gas, Quantity N)
     m_cacheComputed = false;
 }
 
-void GasNode::AddThermalEnergy(Energy thermalEnergy)
+void GasNode::AddInternalEnergy(Energy internalEnergy)
 {
-    m_outputThermalEnergy += thermalEnergy;
+    m_outputInternalEnergy += internalEnergy;
     m_cacheComputed = false;
 }
-/*
-void GasNode::TakeN(Gas gas, Quantity N)
-{
-    if(N > m_nComposition[GetOutputBufferIndex][gas])
-    {
 
-    }
-    else
-    {
-        m_nComposition[GetOutputBufferIndex][gas] -= N;
-    }
-    
-
-    m_nComposition[gas] -= N;
-    m_cacheComputed = false;
-}
-*/
-void GasNode::TakeThermalEnergy(Energy thermalEnergy)
+void GasNode::TakeInternalEnergy(Energy internalEnergy)
 {
-    m_outputThermalEnergy -= thermalEnergy;
+    m_outputInternalEnergy -= internalEnergy;
     m_cacheComputed = false;
 }
 
@@ -101,11 +85,6 @@ Quantity GasNode::GetInputN(Gas gas) const
 Quantity GasNode::GetOutputN(Gas gas) const
 {
     return m_outputNComposition[gas];
-}
-
-Energy GasNode::GetThermalEnergy() const
-{
-    return m_inputThermalEnergy + m_outputThermalEnergy;
 }
 
 void GasNode::PrepareTransitions()
@@ -221,8 +200,8 @@ void GasNode::MigrateKineticEnergy()
         }
     }
 
-    m_inputThermalEnergy += divertedEnergy;
-    assert(!isnan(m_inputThermalEnergy));
+    m_inputInternalEnergy += divertedEnergy;
+    assert(!isnan(m_inputInternalEnergy));
 
 #endif
 
@@ -347,8 +326,8 @@ void GasNode::MigrateKineticEnergy()
     {
         if(energyByDirection[i] > 0)
         {
-            m_inputThermalEnergy += TakeEnergy(Transition::Direction(i) , 1.0f);
-            assert(!isnan(m_inputThermalEnergy));
+            m_inputInternalEnergy += TakeEnergy(Transition::Direction(i) , 1.0f);
+            assert(!isnan(m_inputInternalEnergy));
         }
     }
 
@@ -373,7 +352,7 @@ void GasNode::ApplyTransitions()
     {
         Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
         
-        EDiff += link->outputThermalEnergy;
+        EDiff += link->outputInternalEnergy;
 
         for(Gas gas : AllGas())
         {
@@ -383,7 +362,7 @@ void GasNode::ApplyTransitions()
     }
 
     Quantity futureQty = m_cacheN + NDiff;
-    Quantity futureE = m_inputThermalEnergy + m_outputThermalEnergy + EDiff;
+    Quantity futureE = m_inputInternalEnergy + m_outputInternalEnergy + EDiff;
 
     if(futureQty < 0)
     {
@@ -408,20 +387,20 @@ void GasNode::ApplyTransitions()
         Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
         assert(link->node == this);
 
-        if(link->outputThermalEnergy > 0)
+        if(link->outputInternalEnergy > 0)
         {
-            m_inputThermalEnergy += link->outputThermalEnergy;
-            assert(!isnan(m_inputThermalEnergy));
+            m_inputInternalEnergy += link->outputInternalEnergy;
+            assert(!isnan(m_inputInternalEnergy));
         }
         else
         {
-            m_outputThermalEnergy += link->outputThermalEnergy;
-            if(m_outputThermalEnergy < 0)
+            m_outputInternalEnergy += link->outputInternalEnergy;
+            if(m_outputInternalEnergy < 0)
             {
                 isFlushNeeded = true;
             }
         }
-        link->outputThermalEnergy = 0;
+        link->outputInternalEnergy = 0;
 
         for(Gas gas : AllGas())
         {
@@ -458,8 +437,8 @@ void GasNode::ApplyTransitions()
 
 void GasNode::FlushInput()
 {
-    m_outputThermalEnergy += m_inputThermalEnergy;
-    m_inputThermalEnergy = 0;
+    m_outputInternalEnergy += m_inputInternalEnergy;
+    m_inputInternalEnergy = 0;
 
     for(Gas gas : AllGas())
     {
@@ -479,10 +458,9 @@ void GasNode::ComputeCache()
     Scalar inputEnergyPerK = 0;
     Scalar outputEnergyPerK = 0;
 
-    assert(!isnan(m_inputThermalEnergy));
-    assert(!isnan(m_outputThermalEnergy));
-    assert(m_outputThermalEnergy >= 0);
-    
+    assert(!isnan(m_inputInternalEnergy));
+    assert(!isnan(m_outputInternalEnergy));
+    assert(m_outputInternalEnergy >= 0);
 
      for(Gas gas : AllGas())
     {
@@ -543,6 +521,18 @@ void GasNode::ComputeCache()
         m_cacheOutputN = totalOutputN;
     }
 
+    // Compute elastic energy
+    Quantity pressureN = m_cacheN - m_movingN; // Exclude moving N from pressure computation
+    Energy internalEnergy = m_inputInternalEnergy + m_outputInternalEnergy;
+    Scalar A = pressureN * PhysicalConstants::gasConstant / (m_volume * m_cacheEnergyPerK);
+    m_cachePressure = A * internalEnergy / (1 + A*m_volume * PhysicalConstants::gasElasticCoef);
+    assert(m_cachePressure >= 0);
+
+    Energy elasticEnergy = PhysicalConstants::gasElasticCoef * m_cachePressure * m_volume;
+    Energy thermalEnergy = internalEnergy - elasticEnergy;
+    m_cacheThermalEnergyRatio = thermalEnergy / internalEnergy;
+
+
     // Compute temperature
     if(m_cacheEnergyPerK == 0)
     {
@@ -550,7 +540,7 @@ void GasNode::ComputeCache()
     }
     else
     {
-        m_cacheTemperature = (m_inputThermalEnergy + m_outputThermalEnergy) / m_cacheEnergyPerK;
+        m_cacheTemperature = thermalEnergy / m_cacheEnergyPerK;
     }
 
     if(inputEnergyPerK == 0)
@@ -559,7 +549,8 @@ void GasNode::ComputeCache()
     }
     else
     {
-        m_cacheInputTemperature = m_inputThermalEnergy / inputEnergyPerK;
+        Energy inputThermalEnergy = m_cacheThermalEnergyRatio * m_inputInternalEnergy;
+        m_cacheInputTemperature = inputThermalEnergy / inputEnergyPerK;
     }
 
     if(outputEnergyPerK == 0)
@@ -568,7 +559,8 @@ void GasNode::ComputeCache()
     }
     else
     {
-        m_cacheOutputTemperature = m_outputThermalEnergy / outputEnergyPerK;
+        Energy outputThermalEnergy = m_cacheThermalEnergyRatio * m_outputInternalEnergy;
+        m_cacheOutputTemperature = outputThermalEnergy / outputEnergyPerK;
     }
 
     if(m_cacheTemperature < 0)
@@ -576,14 +568,7 @@ void GasNode::ComputeCache()
         m_cacheTemperature = 0;
     }
 
-    // Compute pressure
-    // Exclude moving N from pressure computation
-    Quantity pressureN = m_cacheN - m_movingN;
-     m_cachePressure = PhysicalConstants::ComputePressure(pressureN, m_volume, m_cacheTemperature);
-    if(m_cachePressure < 0)
-    {
-        m_cachePressure = 0;
-    }
+    Scalar pressureCheck = PhysicalConstants::ComputeGasPressure(pressureN, m_volume, m_cacheTemperature);
 
     Scalar density = Scalar(m_cacheMass) / m_volume;
     m_cachePressureGradient = density *  PhysicalConstants::gravity;
@@ -644,27 +629,26 @@ Scalar GasNode::GetPressureGradient() const
     return m_cachePressureGradient;
 }
 
-Energy GasNode::GetEnergy() const
+Energy GasNode::GetInternalEnergy() const
 {
-    Energy totalEnergy = GetCheckEnergy();
-    if(totalEnergy > 0)
-    {
-        return totalEnergy;
-    }
-    else
-    {
-        return 0;
-    }
+    Energy totalEnergy = m_inputInternalEnergy + m_outputInternalEnergy;
+    assert(totalEnergy > 0);
+    return totalEnergy;
+}
+
+Energy GasNode::GetThermalEnergy() const
+{
+    return GetInternalEnergy() * m_cacheThermalEnergyRatio;
 }
 
 Energy GasNode::GetOutputEnergy() const
 {
-    return m_outputThermalEnergy;
+    return m_outputInternalEnergy;
 }
 
 Energy GasNode::GetInputEnergy() const
 {
-    return m_inputThermalEnergy;
+    return m_inputInternalEnergy;
 }
 
 

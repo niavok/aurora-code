@@ -15,8 +15,7 @@ public:
     virtual void ComputeCache() = 0;
     virtual void PrepareTransitions() = 0;
     virtual void ApplyTransitions() = 0;
-    virtual Energy GetEnergy() const = 0;
-    virtual Energy GetCheckEnergy() const = 0;
+    virtual Energy GetInternalEnergy() const = 0;
     virtual Quantity GetCheckN() const = 0;
 
     void AddTransition(TransitionLink const& transitionLink);

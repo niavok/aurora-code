@@ -14,6 +14,8 @@ public:
     static constexpr Scalar potentialEnergyCoef = 1; // Energy of a mass moving througth a transition
     static constexpr Scalar gasViscosity = 0.99;
     static constexpr Scalar gasKineticLossRatio = 0.0001;
+    static constexpr Scalar gasAdiabaticIndex = 1.3;
+    static constexpr Scalar gasElasticCoef = gasAdiabaticIndex / (gasAdiabaticIndex - 1);
 
     static void Init();
 
@@ -25,9 +27,9 @@ public:
 
     static Volume GetLiquidVolumeByN(Liquid material, Quantity N, Scalar pressure, Scalar temperature);
 
-    static Energy EstimateThermalEnergy(Gas material, Quantity N, Scalar temperature);
-    static Energy EstimateThermalEnergy(Liquid material, Quantity N, Scalar temperature);
-    static Energy EstimateThermalEnergy(Solid material, Quantity N, Scalar temperature);
+    static Energy EstimateInternalEnergy(Gas material, Quantity N, Scalar temperature, Scalar volume);
+    static Energy EstimateInternalEnergy(Liquid material, Quantity N, Scalar temperature);
+    static Energy EstimateInternalEnergy(Solid material, Quantity N, Scalar temperature);
 
     static Quantity EstimateGasN(Volume volume, Scalar pressure, Scalar temperature);
     //static Material GetDissolvedMaterial(Material material);
@@ -40,7 +42,7 @@ public:
     static Scalar GetMassByN(Liquid material);
     static Scalar GetMassByN(Solid material);
 
-    static Scalar ComputePressure(Quantity N, Volume volume, Scalar temperature);
+    static Scalar ComputeGasPressure(Quantity N, Volume volume, Scalar temperature);
 };
 
 }
