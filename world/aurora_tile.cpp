@@ -1,4 +1,5 @@
 #include <cassert>
+ #include <algorithm>
 
 #include "aurora_tile.h"
 #include "aurora_level.h"
@@ -8,24 +9,29 @@
 
 namespace aurora {
 
-Tile::Tile(Mm size, Mm2 position)
+Tile::Tile(Meter size, Meter2 bottomLeftPosition, Meter depth)
 	: m_size(size)
-	, m_position(position)
-    , m_altitude(-(position.y + size / 2))
-    , m_worldArea(position, Mm2(size, size)) {
+    , m_depth(depth)
+	, m_bottomLeftPosition(bottomLeftPosition)
+    , m_centerAltitude(m_bottomLeftPosition.y + size *0.5)
+    , m_totalVolume(sqr(m_size) * m_depth)
+    , m_worldArea(m_bottomLeftPosition, Meter2(size, size))
+{
+    m_gasNode.SetCenterAltitude(m_centerAltitude);
 
-    m_content = new TileContent(GetVolume(), m_altitude); // TODO optimized in case of tile that will be splitted
+
+    //m_content = new TileContent(GetVolume(), m_altitude); // TODO optimized in case of tile that will be splitted
 	//printf("AuroraTile new AuroraTileContent %p\n", m_content);
 }
 
 
 Tile::~Tile()
 {
-	if(m_content)
+	/*if(m_content)
 	{
 		//printf("AuroraTile delete AuroraTileContent %p\n", m_content);
 		delete m_content;
-	}
+	}*/
 }
 
 
@@ -89,15 +95,15 @@ Tile::~Tile()
 
 //}
 
-Volume Tile::GetVolume() const
+Volume Tile::GetTotalVolume() const
 {
-    return MmSquareToVolume(m_size);
+    return m_totalVolume;
 }
-
+/*
 bool Tile::IsComposite() const
 {
 	return m_content == nullptr;
-}
+}*/
 
 //void Tile::PaintContent(AuroraMaterial const& material)
 //{
@@ -113,7 +119,7 @@ bool Tile::IsComposite() const
 
 //	m_content->SetMaterial(material);
 //}
-
+/*
 void Tile::SetContent(TileContent const& content)
 {
 	if(IsComposite())
@@ -127,11 +133,11 @@ void Tile::SetContent(TileContent const& content)
 	}
 
 	m_content->SetContent(content);
-}
+}*/
 
-Tile::InsideMode Tile::IsInside(MmRect area)
+Tile::InsideMode Tile::IsInside(MeterRect area)
 {
-    MmRect intersection = area.Clip(m_worldArea);
+    MeterRect intersection = area.Clip(m_worldArea);
 
     if(intersection.IsEmpty())
 	{
@@ -146,7 +152,7 @@ Tile::InsideMode Tile::IsInside(MmRect area)
 		return Partially;
 	}
 }
-
+/*
 bool Tile::Split(Level* level)
 {
     if(IsComposite())
@@ -196,8 +202,8 @@ bool Tile::Split(Level* level)
 
         return true;
     }
-}
-
+}*/
+/*
 void Tile::FindTileAt(std::vector<Tile*>& matchs, MmRect area)
 {
     switch(IsInside(area))
@@ -222,7 +228,7 @@ void Tile::FindTileAt(std::vector<Tile*>& matchs, MmRect area)
     break;
     }
 }
-
+*/
 
 ////////////////////////
 /// MaterialQuantity
@@ -300,14 +306,7 @@ void Tile::FindTileAt(std::vector<Tile*>& matchs, MmRect area)
 //////////////////////////
 ///// AuroraTileContent
 //////////////////////////
-
-TileContent::TileContent(Volume volume, Mm altitude)
-    : m_volume(volume)
-{
-    m_gasNode.SetAltitudeMm(altitude);
-
-    // TODO set liquid and solid altitude
-}
+/*
 
 TileContent::~TileContent()
 {
@@ -317,8 +316,8 @@ TileContent::~TileContent()
     }
 }
 
-
-void TileContent::AddSolid(Solid solid, Quantity N, Energy thermalEnergy)
+*/
+void Tile::AddSolid(Solid solid, Quantity N, Energy thermalEnergy)
 {
     bool materialFound = false;
 
@@ -342,7 +341,7 @@ void TileContent::AddSolid(Solid solid, Quantity N, Energy thermalEnergy)
     UpdateVolumes();
 }
 
-void TileContent::AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Energy thermalEnergy)
+void Tile::AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Energy thermalEnergy)
 {
     LiquidNode* nodeToUse = nullptr;
 
@@ -369,7 +368,7 @@ void TileContent::AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Ener
     UpdateVolumes();
 }
 
-void TileContent::AddGas(Gas gas, Quantity N, Energy internalEnergy)
+void Tile::AddGas(Gas gas, Quantity N, Energy internalEnergy)
 {
     m_gasNode.AddN(gas, N);
     m_gasNode.AddInternalEnergy(internalEnergy);
@@ -377,10 +376,19 @@ void TileContent::AddGas(Gas gas, Quantity N, Energy internalEnergy)
     UpdateVolumes();
 }
 
-void TileContent::UpdateVolumes()
+void Tile::ClearContent()
+{
+    m_gasNode.ClearContent();
+    m_liquidNodes.clear();
+    m_solidComposition.clear();
+
+    UpdateVolumes();
+}
+
+void Tile::UpdateVolumes()
 {
     // Solid volume
-    Volume maxSolidVolume = m_volume;
+    Volume maxSolidVolume = m_totalVolume;
 
     if(HasGas())
     {
@@ -409,7 +417,7 @@ void TileContent::UpdateVolumes()
     m_solidVolume = needSolidVolume;
 
     // Liquid volume
-    Volume maxLiquidVolume = m_volume - m_solidVolume;
+    Volume maxLiquidVolume = m_totalVolume - m_solidVolume;
 
     if(HasGas())
     {
@@ -443,25 +451,27 @@ void TileContent::UpdateVolumes()
     }
 
     m_gasNode.SetVolume(GetGasVolume());
+    m_gasNode.SetHeight(m_size);
 }
 
-Volume TileContent::GetGasVolume() const
+Volume Tile::GetGasVolume() const
 {
-    return MAX(0, m_volume - m_solidVolume - GetLiquidsVolume());
+    return std::max(0., m_totalVolume - m_solidVolume - GetLiquidsVolume());
 }
 
-
+/*
 Volume TileContent::GetTotalVolume() const
 {
     return m_volume;
 }
-
-Volume TileContent::GetSolidsVolume() const
+*/
+Volume Tile::GetSolidsVolume() const
 {
     return m_solidVolume;
 }
 
-Volume TileContent::GetLiquidsVolume() const
+
+Volume Tile::GetLiquidsVolume() const
 {
     Volume volume = 0;
 
@@ -474,12 +484,12 @@ Volume TileContent::GetLiquidsVolume() const
 }
 
 
-bool TileContent::HasSolid() const
+bool Tile::HasSolid() const
 {
     return m_solidComposition.size() > 0;
 }
 
-bool TileContent::HasGas() const
+bool Tile::HasGas() const
 {
     for (Gas gas : AllGas())
     {
@@ -492,18 +502,17 @@ bool TileContent::HasGas() const
     return false;
 }
 
-
-bool TileContent::HasLiquid() const
+bool Tile::HasLiquid() const
 {
     return m_liquidNodes.size() > 0;
 }
 
-bool TileContent::IsEmpty() const
+bool Tile::IsEmpty() const
 {
     return !HasGas() && !HasLiquid() && !HasSolid();
 }
 
-
+/*
 
 void TileContent::SetContent(TileContent const& content)
 {
@@ -733,7 +742,7 @@ TileContent TileContent::TakeProportion(int proportion)
 //{
 //	return m_GasComposition;
 //}
-
+*/
 SolidQuantity::SolidQuantity(Solid iSolid, Quantity iN)
     : solid(iSolid)
     , N(iN)

@@ -3,77 +3,64 @@
 
 namespace aurora {
 
-Volume MmSquareToVolume(Mm size) {
-    return Volume(size) * Volume(size) * 1e-6;
-}
-
-Meter MmToMeter(Mm length) {
-    return length * 1e-3;
-}
-
-Mm2::Mm2(Mm iX, Mm iY)
+Meter2::Meter2(Meter iX, Meter iY)
     : x(iX)
     , y(iY)
 {
 }
 
-Mm2::Mm2(Mm xy)
+Meter2::Meter2(Meter xy)
     : x(xy)
     , y(xy)
 {
 }
 
-Mm2 Mm2::operator+(Mm2 const&p_v) const
+Meter2 Meter2::operator+(Meter2 const&p_v) const
 {
-    return Mm2(x + p_v.x, y + p_v.y);
+    return Meter2(x + p_v.x, y + p_v.y);
 }
 
-
-Mm2 Mm2::operator*(Mm v) const
+Meter2 Meter2::operator*(Meter v) const
 {
-    return Mm2(x * v, y * v);
+    return Meter2(x * v, y * v);
 }
 
-
-Vector2 Mm2::ToVector2() const
+Vector2 Meter2::ToVector2() const
 {
     return Vector2(x, y);
 }
 
-
-
-MmRect::MmRect()
+MeterRect::MeterRect()
     : position(0)
     , size(0)
 {
 }
 
-MmRect::MmRect(Mm2 iPosition, Mm2 iSize)
+MeterRect::MeterRect(Meter2 iPosition, Meter2 iSize)
     : position(iPosition)
     , size(iSize)
 {
 }
 
-MmRect::MmRect(Mm x, Mm y, Mm width, Mm height)
+MeterRect::MeterRect(Meter x, Meter y, Meter width, Meter height)
     : position(x, y)
     , size(width, height)
 {
 
 }
 
+MeterRect MeterRect::Clip(MeterRect const& p_rect) const {
 
-MmRect MmRect::Clip(MmRect const& p_rect) const {
-
-    MmRect new_rect = p_rect;
+    MeterRect new_rect = p_rect;
 
     if (!Intersects(new_rect))
-        return MmRect();
+        return MeterRect();
 
     new_rect.position.x = MAX(p_rect.position.x, position.x);
     new_rect.position.y = MAX(p_rect.position.y, position.y);
 
-    Mm2 p_rect_end = p_rect.position + p_rect.size;
-    Mm2 end = position + size;
+    Meter2 p_rect_end = p_rect.position + p_rect.size;
+    Meter2 end = position + size;
 
     new_rect.size.x = MIN(p_rect_end.x, end.x) - new_rect.position.x;
     new_rect.size.y = MIN(p_rect_end.y, end.y) - new_rect.position.y;
@@ -81,7 +68,7 @@ MmRect MmRect::Clip(MmRect const& p_rect) const {
     return new_rect;
 }
 
-bool MmRect::Intersects(MmRect const&p_rect) const {
+bool MeterRect::Intersects(MeterRect const&p_rect) const {
     if (position.x >= (p_rect.position.x + p_rect.size.x))
         return false;
     if ((position.x + size.x) <= p_rect.position.x)

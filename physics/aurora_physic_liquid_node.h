@@ -31,7 +31,7 @@ private:
 
     // Constants
     Liquid m_liquid;
-    Mm m_altitude;
+    Meter m_centerAltitude;
 
     // Variables
     Volume m_volume;

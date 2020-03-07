@@ -71,7 +71,7 @@ bool operator ==(const MaterialComposition &a, const MaterialComposition &b);
 //	scalar m_GasHeat;
 //};
 
-
+/*
 class TileContent {
 public:
     TileContent(Volume volume, Mm altitude);
@@ -80,21 +80,7 @@ public:
 
 //	void SetSolidProperties(bool isPowder);
 
-//    /**
-//     * @brief Fill the tile with a material
-//     * @param material
-//     */
-//    void SetMaterial(AuroraMaterial const& material);
-
     void SetContent(TileContent const& content);
-
-    void AddSolid(Solid solid, Quantity N, Energy thermalEnergy);
-
-    void AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Energy thermalEnergy);
-
-
-    void AddGas(Gas gas, Quantity N, Energy internalEnergy);
-
 
 //    void ClearContent();
 
@@ -114,47 +100,22 @@ public:
 
 //    void SetTemperature(scalar temperature);
 
-    bool HasSolid() const;
 
-    bool HasLiquid() const;
-
-    bool HasGas() const;
-
+    
     Volume GetTotalVolume() const;
-
-    Volume GetGasVolume() const;
-
-    Volume GetLiquidsVolume() const;
-
-    Volume GetSolidsVolume() const;
 
 //    MaterialComposition& GetSolidComposition();
 //    MaterialComposition& GetLiquidComposition();
 //    MaterialComposition& GetGasComposition();
 
-    bool IsEmpty() const;
-
     TileContent TakeProportion(int proportion);
-
-    GasNode& GetGazNode() { return m_gasNode; }
-    GasNode const& GetGazNode() const { return m_gasNode; }
 
 private:
 
     TileContent(TileContent& content); // Not recommanded
 
 
-    Volume m_volume;
-    Volume m_solidVolume;
-
-    std::vector<SolidQuantity> m_solidComposition;
-    Energy m_solidThermalEnergy;
-
-    std::vector<LiquidNode*> m_liquidNodes;
-
-    GasNode m_gasNode;
-
-    void UpdateVolumes();
+    
 
 //    scalar m_isPowder;
 
@@ -166,10 +127,10 @@ private:
 //	scalar liquidHeat;
 //	scalar GasHeat;
 };
-
+*/
 class Tile {
 public:
-    Tile(Mm size, Mm2 position);
+    Tile(Meter size, Meter2 bottomLeftPosition, Meter depth);
     ~Tile();
 
 	enum InsideMode	{
@@ -178,11 +139,20 @@ public:
 		Partially,
 	};
 
-    InsideMode IsInside(MmRect area);
+    InsideMode IsInside(MeterRect area);
 
     //void PaintTile(Rect2 area, AuroraMaterial const& material);
 
-    Volume GetVolume() const;
+    Volume GetTotalVolume() const;
+    Volume GetGasVolume() const;
+    Volume GetLiquidsVolume() const;
+    Volume GetSolidsVolume() const;
+
+    bool HasSolid() const;
+    bool HasLiquid() const;
+    bool HasGas() const;
+    bool IsEmpty() const;
+
 
 //	/**
 //	 * @brief Make the tile composite if possible,
@@ -195,7 +165,7 @@ public:
      * @brief IsComposite
      * @return Return true if the tile has children
      */
-    bool IsComposite() const;
+    //bool IsComposite() const;
 
 //	/**
 //	 * @brief Erase all the content with the given material
@@ -212,36 +182,53 @@ public:
 	 * @brief Erase all the content and replace with the given content
 	 * @param content used as quantity so it won't be scaled
 	 */
-    void SetContent(TileContent const& content);
+    //void SetContent(TileContent const& content);
 
-    Mm2 GetPositionMm() const { return m_position; }
+    Meter2 GetBottomLeftPosition() const { return m_bottomLeftPosition; }
 
-    Mm GetSizeMm() const { return m_size; }
+    Meter GetSize() const { return m_size; }
 
-    std::vector<Tile*> const& GetChildren() const { return m_children; }
+    GasNode& GetGazNode() { return m_gasNode; }
+    GasNode const& GetGazNode() const { return m_gasNode; }
 
-    std::vector<Tile*>& GetChildren() { return m_children; }
+    void AddSolid(Solid solid, Quantity N, Energy thermalEnergy);
+    void AddLiquid(Liquid liquid, Quantity N, Quantity dissolvedN, Energy thermalEnergy);
+    void AddGas(Gas gas, Quantity N, Energy internalEnergy);
 
-    TileContent* GetContent() { return m_content; }
-    TileContent const* GetContent() const { return m_content; }
+    void ClearContent();
 
-    bool Split(Level* level);
 
-    void FindTileAt(std::vector<Tile*>& matchs, MmRect area);
+
+
+
+//    TileContent* GetContent() { return m_content; }
+  //  TileContent const* GetContent() const { return m_content; }
+
+    //bool Split(Level* level);
+
+    //void FindTileAt(std::vector<Tile*>& matchs, MmRect area);
 
 private:
+    Meter m_size;
+    Meter m_depth;
+    Meter2 m_bottomLeftPosition;
+    Meter m_centerAltitude;
 
+    Volume m_totalVolume;
+    Volume m_solidVolume;
 
+    std::vector<SolidQuantity> m_solidComposition;
+    Energy m_solidThermalEnergy;
 
+    std::vector<LiquidNode*> m_liquidNodes;
 
-    Mm m_size;
-    Mm2 m_position; // Optionnal ?
-    Mm m_altitude;
-    std::vector<Tile*> m_children;
-    TileContent* m_content;
+    GasNode m_gasNode;
+
+    void UpdateVolumes();
+
 
 	// Cache
-    MmRect m_worldArea;
+    MeterRect m_worldArea;
 };
 
 }

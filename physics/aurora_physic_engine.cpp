@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#define ENERGY_CHECK 0
+
 namespace aurora {
 
 PhysicEngine::PhysicEngine()
@@ -53,6 +55,7 @@ char * sprintf_int128( __int128_t n ) {
 
 void PhysicEngine::Step(Scalar delta)
 {
+#if ENERGY_CHECK
      Scalar initialTotalEnergy = ComputeEnergy("initial");
     Quantity initialTotalN = 0;
     for(FluidNode* node : m_nodes)
@@ -60,7 +63,7 @@ void PhysicEngine::Step(Scalar delta)
        // initialTotalEnergy += node->GetInternalEnergy();
         initialTotalN += node->GetCheckN();
     }
-
+#endif
     if(m_stepState !=  TRANSITION_APPLIED)
     {
         SubStep(delta);
@@ -73,6 +76,7 @@ void PhysicEngine::Step(Scalar delta)
         ApplyTransitionsInput();
     }
 
+#if ENERGY_CHECK
     Quantity finalTotalN = 0;
     for(FluidNode* node : m_nodes)
     {
@@ -80,6 +84,7 @@ void PhysicEngine::Step(Scalar delta)
     }
 
     Scalar check = ComputeEnergy("after all step");
+#endif
     // assert((initialTotalEnergy - check) < 1e-1); TODO repair
     //assert(initialTotalN - finalTotalN < 1e-6);
 
@@ -115,6 +120,7 @@ void PhysicEngine::Step(Scalar delta)
 
 void PhysicEngine::SubStep(Scalar delta)
 {
+#if ENERGY_CHECK
     Scalar initialTotalEnergy = ComputeEnergy("initial");
     __int128 initialTotalN = 0;
     for(FluidNode* node : m_nodes)
@@ -122,7 +128,7 @@ void PhysicEngine::SubStep(Scalar delta)
        // initialTotalEnergy += node->GetInternalEnergy();
         initialTotalN += node->GetCheckN();
     }
-
+#endif
 
     switch (m_stepState)
     {
@@ -143,18 +149,17 @@ void PhysicEngine::SubStep(Scalar delta)
         break;
     }
 
+#if ENERGY_CHECK
      __int128 finalTotalN = 0;
     for(FluidNode* node : m_nodes)
     {
         finalTotalN += node->GetCheckN();
     }
 
-    
-
     Scalar check = ComputeEnergy("after all step");
     assert((initialTotalEnergy - check) < 1e-8);
     assert(initialTotalN == finalTotalN);
-
+#endif
 }
 
 Energy PhysicEngine::ComputeEnergy(const char* label)
@@ -195,6 +200,7 @@ Energy PhysicEngine::ComputeEnergy(const char* label)
 
     return energy;
 }
+
 
 void PhysicEngine::PrepareTransitions()
 {

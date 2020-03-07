@@ -48,9 +48,12 @@ public:
     Quantity GetCheckN() const { return m_cacheCheckN; }
     Scalar GetMolarMass() const { return m_cacheMolarMass; }
 
-    Mm GetAltitudeMm() const { return m_altitude; }
-    void SetAltitudeMm(Mm altitude);
+    Meter GetCenterAltitude() const { return m_centerAltitude; }
+    void SetCenterAltitude(Meter centerAltitude);
+    Meter GetHeight() const { return m_height; }
+    void SetHeight(Meter height);
 
+    void ClearContent();
 
     //Scalar ComputePressure() const;
     //Scalar ComputeTemperature() const;
@@ -67,8 +70,9 @@ private:
     void FlushInput();
 
     // Constants
-    Mm m_altitude;
+    Meter m_centerAltitude;
     Volume m_volume;
+    Meter m_height;
     //int8_t m_transitionCount;
 
     // Variables

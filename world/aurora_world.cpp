@@ -4,6 +4,7 @@
 
 #include "../physics/aurora_physic_gas_gas_transition.h"
 
+#include <assert.h>
 
 namespace aurora {
 
@@ -59,11 +60,9 @@ void AuroraWorld::Update(Scalar delta)
     }
 }
 
-
-
-Level* AuroraWorld::CreateLevel(bool horizontalLoop, Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
+Level* AuroraWorld::CreateLevel(Meter2 levelBottomLeftPosition, Meter tileSize, Meter depth, int tileHCount, int tileVCount, bool horizontalLoop)
 {
-    Level* level = new Level(horizontalLoop, minTileSize, maxTileSubdivision, rootTileHCount, rootTileVCount);
+    Level* level = new Level(levelBottomLeftPosition, tileSize, depth, tileHCount, tileVCount, horizontalLoop);
     m_levels.push_back(level);
 
     return level;
@@ -75,114 +74,50 @@ void AuroraWorld::InitPhysics()
 
     for(Level* level : m_levels)
     {
-        for(Tile* tile : level->GetRootTiles())
+        for(Tile* tile : level->GetTiles())
         {
-            m_physicEngine.AddFluidNode(&tile->GetContent()->GetGazNode());
-
-
-            {
-                MmRect tileLeft;
-
-                tileLeft.position.y = tile->GetPositionMm().y;
-                if(tile->GetPositionMm().x == 0 && level->IsHorizontalLoop())
-                {
-                    // Make world circular
-                    tileLeft.position.x = level->GetSizeMm().x - 1;
-                }
-                else
-                {
-                    tileLeft.position.x = tile->GetPositionMm().x - 1;
-                }
-
-                tileLeft.size.x = 1;
-                tileLeft.size.y = tile->GetSizeMm();
-
-
-                std::vector<Tile*> tilesToConnect;
-                level->FindTileAt(tilesToConnect, tileLeft);
-                for(Tile* tileToConnect : tilesToConnect)
-                {
-                    Mm relativeAltitudeBMm;
-                    Mm relativeAltitudeAMm;
-                    if(tileToConnect->GetSizeMm() < tile->GetSizeMm())
-                    {
-                        relativeAltitudeBMm = tileToConnect->GetSizeMm() / 2;
-                        relativeAltitudeAMm = tileToConnect->GetPositionMm().y - tile->GetPositionMm().y + relativeAltitudeBMm;
-                    }
-                    else
-                    {
-                        relativeAltitudeAMm = tile->GetSizeMm() / 2;
-                        relativeAltitudeBMm = tile->GetPositionMm().y - tileToConnect->GetPositionMm().y + relativeAltitudeAMm;
-                    }
-
-                    Meter relativeLongitudeAMm = 0;
-                    Meter relativeLongitudeBMm = tileToConnect->GetSizeMm();
-
-                    Meter relativeAltitudeB = MmToMeter(relativeAltitudeBMm);
-                    Meter relativeAltitudeA = MmToMeter(relativeAltitudeAMm);
-                    Meter relativeLongitudeA = MmToMeter(relativeLongitudeAMm);
-                    Meter relativeLongitudeB = MmToMeter(relativeLongitudeBMm);
-
-                    Meter section = MmToMeter(MIN(tileToConnect->GetSizeMm(), tile->GetSizeMm()));
-                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_LEFT), relativeAltitudeA, relativeAltitudeB, relativeLongitudeA, relativeLongitudeB, section);
-                }
-            }
-
-
-
-            {
-                MmRect tileBottom;
-                tileBottom.position.x = tile->GetPositionMm().x;
-                tileBottom.position.y = tile->GetPositionMm().y + tile->GetSizeMm();
-                tileBottom.size.x = tile->GetSizeMm();
-                tileBottom.size.y = 1;
-
-                std::vector<Tile*> tilesToConnect;
-                level->FindTileAt(tilesToConnect, tileBottom);
-                for(Tile* tileToConnect : tilesToConnect)
-                {
-                    Meter section = MmToMeter(MIN(tileToConnect->GetSizeMm(), tile->GetSizeMm()));
-
-                    Mm relativeAltitudeAMm = tile->GetSizeMm();
-                    Mm relativeAltitudeBMm = 0;
-                    Mm relativeLongitudeAMm;
-                    Mm relativeLongitudeBMm;
-
-                    if(tileToConnect->GetSizeMm() < tile->GetSizeMm())
-                    {
-                        relativeLongitudeBMm = tileToConnect->GetSizeMm() / 2;
-                        relativeLongitudeAMm = tileToConnect->GetPositionMm().x - tile->GetPositionMm().x + relativeLongitudeBMm;
-                    }
-                    else
-                    {
-                        relativeLongitudeAMm = tile->GetSizeMm() / 2;
-                        relativeLongitudeBMm = tile->GetPositionMm().x - tileToConnect->GetPositionMm().x + relativeLongitudeAMm;
-                    }
-
-                    Meter relativeAltitudeB = MmToMeter(relativeAltitudeBMm);
-                    Meter relativeAltitudeA = MmToMeter(relativeAltitudeAMm);
-                    Meter relativeLongitudeA = MmToMeter(relativeLongitudeAMm);
-                    Meter relativeLongitudeB = MmToMeter(relativeLongitudeBMm);
-
-                    ConnectTiles(tile, tileToConnect, Transition::Direction(Transition::Direction::DIRECTION_DOWN), relativeAltitudeA, relativeAltitudeB, relativeLongitudeA, relativeLongitudeB, section);
-                }
-            }
+            m_physicEngine.AddFluidNode(&tile->GetGazNode());
         }
+
+
+        level->ForEachTransition([this](Tile* tileA, Tile* tileB, Transition::Direction direction)
+        {
+            // All level tile have the same size, so transition are all at the center altitude
+
+
+            GasGasTransition::Config config(tileA->GetGazNode(), tileB->GetGazNode());
+
+            if(direction == Transition::Direction::DIRECTION_RIGHT)
+            {
+                config.relativeAltitudeA = tileA->GetSize() / 2;
+                config.relativeAltitudeB = tileB->GetSize() / 2;
+                config.relativeLongitudeA = tileA->GetSize();
+                config.relativeLongitudeB = 0;
+            }
+            else if(direction == Transition::Direction::DIRECTION_UP)
+            {
+                config.relativeAltitudeA = tileA->GetSize();
+                config.relativeAltitudeB = 0;
+                config.relativeLongitudeA = tileA->GetSize() / 2;
+                config.relativeLongitudeB = tileB->GetSize() / 2;
+            }
+            else
+            {
+                assert(false); // ForEachTransition should not send other directions
+            }
+
+            config.direction = direction;
+            config.section = tileA->GetSize();
+            ConnectTiles(config);
+        });
     }
 
-    m_physicEngine.CheckDuplicates();
+    // TODO do this sanity check only sometime (debug command line)
+    //m_physicEngine.CheckDuplicates();
 }
 
-void AuroraWorld::ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB, Meter relativeLongitudeA, Meter relativeLongitudeB, Meter section)
+void AuroraWorld::ConnectTiles(GasGasTransition::Config const& config)
 {
-    GasGasTransition::Config config(tileA->GetContent()->GetGazNode(), tileB->GetContent()->GetGazNode());
-    config.relativeAltitudeA = relativeAltitudeA;
-    config.relativeAltitudeB = relativeAltitudeB;
-    config.relativeLongitudeA = relativeLongitudeA;
-    config.relativeLongitudeB = relativeLongitudeB;
-    config.direction = direction;
-    config.section = section;
-
     Transition* transition = new GasGasTransition(config);
     m_physicEngine.AddTransition(transition);
 }
@@ -199,19 +134,9 @@ void AuroraWorld::SetPause(bool pause)
 
 void AuroraWorld::Step()
 {
-    //for(int i = 0; i < 20 ; i++)
-    {
-        m_physicEngine.Step(0.1);
-    }
-}
+    m_physicEngine.Step(0.1);
 
-//void AuroraWorld::Repack()
-//{
-//	for(AuroraTile* tile : m_rootTiles)
-//	{
-//		tile->Repack();
-//	}
-//}
+}
 
 //Rect2 AuroraWorld::GetWorldArea() const
 //{

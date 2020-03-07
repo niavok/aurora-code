@@ -4,6 +4,7 @@
 
 #include "aurora_tile.h"
 #include <vector>
+#include <functional>
 
 namespace aurora {
 
@@ -19,30 +20,39 @@ public:
     //void reset();
     //int get_total() const;
 
-    Level(bool horizontalLoop, Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount);
+    Level(Meter2 levelBottomLeftPosition, Meter tileSize, Meter levelDepth, int tileHCount, int tileVCount, bool horizontalLoop);
 
     //void PaintTile(Rect2 area, AuroraMaterial const& material);
 
     //void Repack();
 
-    std::vector<Tile*>& GetRootTiles() { return m_rootTiles; }
-    std::vector<Tile*> const& GetRootTiles() const { return m_rootTiles; }
+    std::vector<Tile*>& GetTiles() { return m_tiles; }
+    std::vector<Tile*> const& GetTiles() const { return m_tiles; }
 
-    Mm2 GetSizeMm() const { return m_size; };
-    Mm GetMinTileSizeMm() const { return m_minTileSize; }
+    Meter2 GetLevelSize() const { return m_levelSize; };
+    Meter GetTileSize() const { return m_tileSize; }
+    Meter2 GetLevelBottomLeftPosition() const { return m_levelBottomLeftPosition; }
 
-    void FindTileAt(std::vector<Tile*>& matchs, MmRect area);
+    //void FindTileAt(std::vector<Tile*>& matchs, MmRect area);
 
 
     //Rect2 GetArea() const;
 
     bool IsHorizontalLoop() const { return m_horizontalLoop; }
 
+    void ForEachTransition(std::function<void(Tile* tileA, Tile* tileB, Transition::Direction direction)> callback);
+
+    Tile* GetTileAtIndex(int x, int y);
+
 private:
-    std::vector<Tile*> m_rootTiles;
-    Mm m_minTileSize;
-    Mm m_maxTileSize;
-    Mm2 m_size;
+    std::vector<Tile*> m_tiles;
+    Meter m_tileSize;
+    Meter m_levelDepth;
+    int m_tileHCount;
+    int m_tileVCount;
+    Meter2 m_levelSize;
+    Meter2 m_levelBottomLeftPosition;
+
     bool m_horizontalLoop;
 };
 

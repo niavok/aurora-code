@@ -4,6 +4,7 @@
 #include "scene/main/node.h"
 #include "../tools/aurora_types.h"
 #include "../physics/aurora_physic_engine.h"
+#include "../physics/aurora_physic_gas_gas_transition.h"
 
 #include <vector>
 
@@ -26,14 +27,14 @@ protected:
 public:
     AuroraWorld();
 
-    void Update(Scalar delta);
+    void Update(Scalar deltaTime);
 
-    Level* CreateLevel(bool horizontalLoop, Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount);
+    Level* CreateLevel(Meter2 levelBottomLeftPosition, Meter tileSize, Meter depth, int tileHCount, int tileVCount, bool horizontalLoop);
 
     std::vector<Level*>& GetLevels() { return m_levels; }
     std::vector<Level*> const& GetLevels() const { return m_levels; }
 
-    void ConnectTiles(Tile* tileA, Tile* tileB, Transition::Direction direction, Meter relativeAltitudeA, Meter relativeAltitudeB,  Meter relativeLongitudeA, Meter relativeLongitudeB, Meter section);
+    void ConnectTiles(GasGasTransition::Config const& config);
 
     bool IsPaused();
     void SetPause(bool pause);

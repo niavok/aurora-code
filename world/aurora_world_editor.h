@@ -57,8 +57,8 @@ public:
 private:
     AuroraWorld& m_world;
 
-    void PaintTiles(Level* level, TileComposition const& composition, MmRect area);
-    void PaintTile(Level* level, Tile* tile, TileComposition const& composition, MmRect area);
+    void PaintTiles(Level* level, TileComposition const& composition, MeterRect area);
+    void PaintTile(Level* level, Tile* tile, TileComposition const& composition, MeterRect area);
     void SetTileComposition(Tile* tile, TileComposition composition);
 
     void Repack(Level* level);

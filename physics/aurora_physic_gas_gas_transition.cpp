@@ -67,10 +67,10 @@ void GasGasTransition::Step(Scalar delta)
 
     Energy kineticEnergyDelta = initialKineticEnergyDelta;
 
-    Scalar pressureA = A.GetPressure() + A.GetPressureGradient() * linkA.altitudeRelativeToNode;
-    Scalar pressureB = B.GetPressure() + B.GetPressureGradient() * linkB.altitudeRelativeToNode;
+    Scalar pressureA = A.GetPressure() + A.GetPressureGradient() * (A.GetHeight() - linkA.altitudeRelativeToNode);
+    Scalar pressureB = B.GetPressure() + B.GetPressureGradient() * (A.GetHeight() - linkB.altitudeRelativeToNode);
 
-    Meter deltaAltitude = MmToMeter(B.GetAltitudeMm() - A.GetAltitudeMm());
+    Meter deltaAltitude = B.GetCenterAltitude() - A.GetCenterAltitude();
 
     Scalar deltaMass = 0;
 
@@ -106,13 +106,13 @@ void GasGasTransition::Step(Scalar delta)
             Energy sourceE0 = pressureSourceNode.GetThermalEnergy() * sourceN0 / pressureSourceNode.GetN();
             Scalar sourceMolarMass = pressureSourceNode.GetMolarMass();
             Scalar sourceMolarHeatCapacity = pressureSourceNode.GetEnergyPerK() / pressureSourceNode.GetN();
-            Scalar sourceDh = m_links[pressureSourceIndex].altitudeRelativeToNode;
+            Scalar sourceDh = pressureSourceNode.GetHeight() - m_links[pressureSourceIndex].altitudeRelativeToNode;
 
             Scalar destinationN0 = pressureDestinationNode.GetN() - movingRatio * pressureDestinationNode.GetMovingN();
             Energy destinationE0 = destinationN0 > 0 ? pressureDestinationNode.GetThermalEnergy() * destinationN0 / pressureDestinationNode.GetN() : 0;
             Scalar destinationMolarMass = pressureDestinationNode.GetMolarMass();
             Scalar destinationMolarHeatCapacity = destinationN0 > 0 ? pressureDestinationNode.GetEnergyPerK() / pressureDestinationNode.GetN() : sourceMolarHeatCapacity;
-            Scalar destinationDh = m_links[1-pressureSourceIndex].altitudeRelativeToNode;
+            Scalar destinationDh = pressureDestinationNode.GetHeight() - m_links[1-pressureSourceIndex].altitudeRelativeToNode;
 
             Volume sourceVolume = pressureSourceNode.GetVolume();
             Volume destinationVolume = pressureDestinationNode.GetVolume();
@@ -205,7 +205,7 @@ void GasGasTransition::Step(Scalar delta)
                     m_links[destinationIndex].outputMaterial[gas] += quantity;
 
                     Scalar mass = quantity * PhysicalConstants::GetMassByN(gas);
-                    deltaMass += mass;
+                    deltaMass += sign(newKineticEnergyDelta) * mass;
                 }
 
                 Energy energy;
@@ -416,7 +416,7 @@ void GasGasTransition::Step(Scalar delta)
     }
 
     Energy energyCheckError = initialCheckEnergy - finalCheckEnergy;
-    assert(std::abs(energyCheckError) < 1e-8);
+    assert(std::abs(energyCheckError) < 1e-7);
 
     m_kineticEnergy = newLocalKineticEnergy;
 }

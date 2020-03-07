@@ -9,8 +9,9 @@ namespace aurora {
 
 
 GasNode::GasNode()
-    : m_altitude(0)
+    : m_centerAltitude(0)
     , m_volume(0)
+    , m_height(0)
     , m_inputInternalEnergy(0)
     , m_outputInternalEnergy(0)
     , m_movingN(0)
@@ -23,7 +24,7 @@ GasNode::GasNode()
 }
 
 GasNode::GasNode(GasNode& node)
-    : m_altitude(node.m_altitude)
+    : m_centerAltitude(node.m_centerAltitude)
     , m_volume(node.m_volume)
     , m_inputInternalEnergy(node.m_inputInternalEnergy)
     , m_outputInternalEnergy(node.m_outputInternalEnergy)
@@ -37,15 +38,32 @@ GasNode::GasNode(GasNode& node)
     }
 }
 
+void GasNode::ClearContent()
+{
+    m_inputInternalEnergy = 0;
+    m_outputInternalEnergy = 0;
+    for(Gas gas : AllGas())
+    {
+        m_inputNComposition[gas] = 0;
+        m_outputNComposition[gas] = 0;
+    }
+    m_cacheComputed = false;
+}
+
 void GasNode::SetVolume(Volume volume)
 {
     m_volume = volume;
     m_cacheComputed = false;
 }
 
-void GasNode::SetAltitudeMm(Mm altitude)
+void GasNode::SetHeight(Meter height)
 {
-    m_altitude = altitude;
+    m_height = height;
+}
+
+void GasNode::SetCenterAltitude(Meter centerAltitude)
+{
+    m_centerAltitude = centerAltitude;
 }
 
 
@@ -568,13 +586,10 @@ void GasNode::ComputeCache()
         m_cacheTemperature = 0;
     }
 
-    Scalar pressureCheck = PhysicalConstants::ComputeGasPressure(pressureN, m_volume, m_cacheTemperature);
-
     Scalar density = Scalar(m_cacheMass) / m_volume;
     m_cachePressureGradient = density *  PhysicalConstants::gravity;
 
     m_cacheComputed = true;
-
 }
 
 Scalar GasNode::GetPressure() const

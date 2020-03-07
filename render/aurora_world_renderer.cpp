@@ -14,8 +14,19 @@
 
 namespace aurora {
 
-static Scalar MmToGodot = 1.; // Mn in micrometer, Godot in Mm
-static Scalar MeterToGodot = 1.e3; // Mn in micrometer, Godot in Mm
+//static Scalar MmToGodot = 1.; // Mn in micrometer, Godot in Mm
+static Scalar meterToGodot = 1.e3; // Mn in micrometer, Godot in Mm
+
+static Vector2 MeterPositionToGodot(Meter2 position)
+{
+	Vector2 godotPosition(position.x * meterToGodot, -position.y * meterToGodot);
+	return godotPosition;
+}
+
+static real_t MeterToGodot(Meter distance)
+{
+	return distance * meterToGodot;
+}
 
 AuroraWorldRenderer::AuroraWorldRenderer()
 	: m_targetWorld(nullptr)
@@ -185,12 +196,12 @@ void AuroraWorldRenderer::DrawLevel(RID& ci, Level const* level)
 {
 	drawTileCount = 0;
 
-    for(Tile const* tile : level->GetRootTiles())
+    for(Tile const* tile : level->GetTiles())
 	{
 		DrawTile(ci, tile);
 	}
 
-	for(Tile const* tile : level->GetRootTiles())
+	for(Tile const* tile : level->GetTiles())
 	{
 		DrawTileOverlay(ci, tile);
 	}
@@ -201,93 +212,83 @@ void AuroraWorldRenderer::DrawLevel(RID& ci, Level const* level)
 
 void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 {
-	if(tile->IsComposite())
+	GasNode const& gas = tile->GetGazNode();
+	Vector2 tilePosition = MeterPositionToGodot(tile->GetBottomLeftPosition());
+
+	// Draw flow
+	for(TransitionLink const & transitionLink : gas.GetTransitionLinks())
 	{
-        for(Tile const* child: tile->GetChildren())
+		GasGasTransition const* transition = reinterpret_cast<GasGasTransition*>(transitionLink.transition);
+
+		Transition::NodeLink const* link = transition->GetNodeLink(transitionLink.index);
+
+		assert(link->outputKineticEnergy == 0);
+		assert(link->inputKineticEnergy == 0);
+
+		Energy transitionEnergy = transition->GetKineticEnergy();
+
+		if(transitionEnergy < 0 && transitionLink.index == 0)
 		{
-			DrawTileOverlay(ci, child);
+			continue;
 		}
-	}
-	else
-	{
-		GasNode const& gas = tile->GetContent()->GetGazNode();
-		Vector2 tilePosition = tile->GetPositionMm().ToVector2() * MmToGodot;
 
-		// Draw flow
-		for(TransitionLink const & transitionLink : gas.GetTransitionLinks())
+		if(transitionEnergy > 0 && transitionLink.index == 1)
 		{
-			GasGasTransition const* transition = reinterpret_cast<GasGasTransition*>(transitionLink.transition);
-
-			Transition::NodeLink const* link = transition->GetNodeLink(transitionLink.index);
-
-			assert(link->outputKineticEnergy == 0);
-			assert(link->inputKineticEnergy == 0);
-
-			Energy transitionEnergy = transition->GetKineticEnergy();
-
-			if(transitionEnergy < 0 && transitionLink.index == 0)
-			{
-				continue;
-			}
-
-			if(transitionEnergy > 0 && transitionLink.index == 1)
-			{
-				continue;
-			}
-
-
-			//Meter altitudeRelativeToNode;
-			//Meter longitudeRelativeToNode;
-			Vector2 relativeBase(link->longitudeRelativeToNode, link->altitudeRelativeToNode);
-
-			Transition::Direction direction = transition->GetDirection(transitionLink.index);
-
-			Vector2 offsetDirection(1,1);
-			Vector2 offsetPosition(0,0);
-			Color transitionColor(0, 0, 0);
-
-			real_t margin_offset = tile->GetSizeMm() * MmToGodot / 6;
-
-			switch (direction)
-			{
-			case Transition::Direction::DIRECTION_DOWN:
-				offsetPosition = Vector2(-margin_offset, 0);
-				offsetDirection = Vector2(0, 1);
-				transitionColor = Color(1, 0, 0, 0.5);
-				break;
-			case Transition::Direction::DIRECTION_UP:
-				offsetPosition = Vector2(margin_offset, 0);
-				offsetDirection = Vector2(0, -1);
-				transitionColor = Color(0, 1, 0, 0.5);
-				break;
-			case Transition::Direction::DIRECTION_LEFT:
-				offsetPosition = Vector2(0, -margin_offset);
-				offsetDirection = Vector2(-1, 0);
-				transitionColor = Color(0, 0, 1, 0.5);
-				break;
-			case Transition::Direction::DIRECTION_RIGHT:
-				offsetPosition = Vector2(0, margin_offset);
-				offsetDirection = Vector2(1, 0);
-				transitionColor = Color(1, 1, 0, 0.5);
-				break;
-			default:
-				assert(false);
-				break;
-			}
-
-			real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 0.001 * PhysicalConstants::kineticCoef;
-			real_t width = 1.f;
-			real_t maxLength = tile->GetSizeMm() * MmToGodot * 0.9;
-			if(length > maxLength)
-			{
-				width = length / maxLength;
-				length = maxLength;
-			}
-
-			//real_t length = sqrt(link->outputKineticEnergy) * 1;
-
-			//draw_line(tilePosition + relativeBase * MeterToGodot + offsetPosition, tilePosition + relativeBase * MeterToGodot + offsetPosition + offsetDirection * length, transitionColor, width);
+			continue;
 		}
+
+
+		//Meter altitudeRelativeToNode;
+		//Meter longitudeRelativeToNode;
+		Meter2 relativeBase(link->longitudeRelativeToNode, link->altitudeRelativeToNode);
+
+		Transition::Direction direction = transition->GetDirection(transitionLink.index);
+
+		Vector2 offsetDirection(1,1);
+		Vector2 offsetPosition(0,0);
+		Color transitionColor(0, 0, 0);
+
+		real_t margin_offset = MeterToGodot(tile->GetSize()) / 6;
+
+		switch (direction)
+		{
+		case Transition::Direction::DIRECTION_DOWN:
+			offsetPosition = Vector2(-margin_offset, 0);
+			offsetDirection = Vector2(0, 1);
+			transitionColor = Color(1, 0, 0, 0.5);
+			break;
+		case Transition::Direction::DIRECTION_UP:
+			offsetPosition = Vector2(margin_offset, 0);
+			offsetDirection = Vector2(0, -1);
+			transitionColor = Color(0, 1, 0, 0.5);
+			break;
+		case Transition::Direction::DIRECTION_LEFT:
+			offsetPosition = Vector2(0, -margin_offset);
+			offsetDirection = Vector2(-1, 0);
+			transitionColor = Color(0, 0, 1, 0.5);
+			break;
+		case Transition::Direction::DIRECTION_RIGHT:
+			offsetPosition = Vector2(0, margin_offset);
+			offsetDirection = Vector2(1, 0);
+			transitionColor = Color(1, 1, 0, 0.5);
+			break;
+		default:
+			assert(false);
+			break;
+		}
+
+		real_t length = (abs(transition->GetKineticEnergy()) + link->outputKineticEnergy + link->inputKineticEnergy) * 0.001 * PhysicalConstants::kineticCoef;
+		real_t width = 1.f;
+		real_t maxLength = MeterToGodot(tile->GetSize()) * 0.9;
+		if(length > maxLength)
+		{
+			width = length / maxLength;
+			length = maxLength;
+		}
+
+		//real_t length = sqrt(link->outputKineticEnergy) * 1;
+
+		//draw_line(tilePosition + relativeBase * MeterToGodot + offsetPosition, tilePosition + relativeBase * MeterToGodot + offsetPosition + offsetDirection * length, transitionColor, width);
 	}
 }
 
@@ -295,109 +296,99 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 {
 	drawTileCount++;
 
-	if(tile->IsComposite())
+	//printf("DrawTile at %ls size %f\n", String(tile->GetPosition()).c_str(), tile->GetSize());
+	//m_testTexture->draw(ci,tile->GetPosition());
+
+	/*Texture* texture;
+
+
+	if(tile->HasSolid())
 	{
-        for(Tile const* child: tile->GetChildren())
-		{
-			DrawTile(ci, child);
-		}
+		texture = *m_testTexture1;
 	}
 	else
 	{
-        //printf("DrawTile at %ls size %f\n", String(tile->GetPosition()).c_str(), tile->GetSize());
-        //m_testTexture->draw(ci,tile->GetPosition());
+		texture = *m_testTexture2;
+	}*/
 
-		Texture* texture;
+	Vector2 pos = MeterPositionToGodot(tile->GetBottomLeftPosition());
+	real_t size = MeterToGodot(tile->GetSize());
+
+	//texture->draw_rect(ci, Rect2(pos, Vector2(size, size)));
 
 
-		if(tile->GetContent()->HasSolid())
+
+	if(true || (pos.x < 1000 && pos.y < 1000))
+	{
+		//Color color(0.9f,0.9f,0.9f);
+		Color color(0.5f,0.5f,0.5f);
+		GasNode const& gas = tile->GetGazNode();
+
+		Scalar tilePressure = gas.GetPressure();
+		Scalar temperature = gas.GetTemperature();
+
+		//gas.ComputeNPT(N, pressure, temperature);
+		Scalar bottomPressure = tilePressure + gas.GetPressureGradient() * tile->GetSize();
+
+		auto PressureToColor = [](Scalar pressure)
 		{
-			texture = *m_testTexture1;
-		}
-		else
-		{
-			texture = *m_testTexture2;
-		}
+			Scalar const minPressure = 16000;
+			Scalar const maxPressure = 300000;
+			//Scalar const minPressure = 99900;
+			//Scalar const maxPressure = 100100;
 
-        Vector2 pos = tile->GetPositionMm().ToVector2() * MmToGodot;
-        real_t size = tile->GetSizeMm() * MmToGodot;
+			return float((pressure-minPressure) / (maxPressure - minPressure));
+			//return 0;
+		};
 
-        //texture->draw_rect(ci, Rect2(pos, Vector2(size, size)));
+		float temperatureColor = float(temperature / 300.);
+		float temperatureColor2 = float(temperature / 600.);
 
-
-
-        if(true || (pos.x < 1000 && pos.y < 1000))
-        {
-            //Color color(0.9f,0.9f,0.9f);
-			Color color(0.5f,0.5f,0.5f);
-            GasNode const& gas = tile->GetContent()->GetGazNode();
-
-            Scalar tilePressure = gas.GetPressure();
-            Scalar temperature = gas.GetTemperature();
-
-            //gas.ComputeNPT(N, pressure, temperature);
-            Scalar bottomPressure = tilePressure + gas.GetPressureGradient() * MmToMeter(tile->GetSizeMm());
-
-            auto PressureToColor = [](Scalar pressure)
-            {
-                Scalar const minPressure = 16000;
-                Scalar const maxPressure = 300000;
-				//Scalar const minPressure = 99900;
-                //Scalar const maxPressure = 100100;
-
-                return float((pressure-minPressure) / (maxPressure - minPressure));
-				//return 0;
-            };
-
-            float temperatureColor = float(temperature / 300.);
-            float temperatureColor2 = float(temperature / 600.);
-
-			float pressureColor = PressureToColor(tilePressure);
-            float bottomPressureColor = PressureToColor(bottomPressure);
+		float pressureColor = PressureToColor(tilePressure);
+		float bottomPressureColor = PressureToColor(bottomPressure);
 
 
 
-            Vector<Vector2> points;
-            points.push_back(pos);
-            points.push_back(pos + Vector2(size, 0));
-            points.push_back(pos + Vector2(size, size));
-            points.push_back(pos + Vector2(0, size));
+		Vector<Vector2> points;
+		points.push_back(pos);
+		points.push_back(pos + Vector2(size, 0));
+		points.push_back(pos + Vector2(size, size));
+		points.push_back(pos + Vector2(0, size));
 
 
 
-            Color topColor(temperatureColor, temperatureColor2, pressureColor);
-            Color bottomColor(temperatureColor, temperatureColor2, bottomPressureColor);
+		Color topColor(temperatureColor, temperatureColor2, pressureColor);
+		Color bottomColor(temperatureColor, temperatureColor2, bottomPressureColor);
 
-            Vector<Color> colors;
-
-
-            colors.push_back(topColor);
-            colors.push_back(topColor);
-            colors.push_back(bottomColor);
-            colors.push_back(bottomColor);
-            //colors.push_back(Color(0, 0, 1, 0.5));
+		Vector<Color> colors;
 
 
-            draw_polygon(points, colors);
-
-            //m_debugFont->draw(ci, pos + Vector2(10, 15), rtos(tilePressure - 1e5  /** 1e-5*/), color);
-			//m_debugFont->draw(ci, pos + Vector2(10, 30), rtos(bottomPressure - 1e5  /** 1e-5*/), color);
-            //m_debugFont->draw(ci, pos + Vector2(10, 45), rtos(temperature), color);
-			//draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
-			//draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
-
-			/*draw_line(pos, pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
-			draw_line(pos, pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));
-			draw_line(pos+ Vector2(size-1, size-1), pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
-			draw_line(pos+ Vector2(size-1, size-1), pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));*/
-		}
-		//virtual void draw_rect(RID p_canvas_item, const Rect2 &p_rect, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, const Ref<Texture> &p_normal_map = Ref<Texture>()) const;
+		colors.push_back(topColor);
+		colors.push_back(topColor);
+		colors.push_back(bottomColor);
+		colors.push_back(bottomColor);
+		//colors.push_back(Color(0, 0, 1, 0.5));
 
 
-		//bool filter_clip;
-		//_get_rects(src_rect, dst_rect, filter_clip);
-		//m_testTexture->draw_rect_region(ci, dst_rect, src_rect, Color(1, 1, 1), false, normal_map, filter_clip);*/
+		draw_polygon(points, colors);
+
+		//m_debugFont->draw(ci, pos + Vector2(10, 15), rtos(tilePressure - 1e5  /** 1e-5*/), color);
+		//m_debugFont->draw(ci, pos + Vector2(10, 30), rtos(bottomPressure - 1e5  /** 1e-5*/), color);
+		//m_debugFont->draw(ci, pos + Vector2(10, 45), rtos(temperature), color);
+		//draw_line(pos, pos + Vector2(0, size), Color(0.5,0.5,0.5));
+		//draw_line(pos, pos + Vector2(size, 0), Color(0.5,0.5,0.5));
+
+		/*draw_line(pos, pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
+		draw_line(pos, pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));
+		draw_line(pos+ Vector2(size-1, size-1), pos + Vector2(0, size-1), Color(0.5,0.5,0.5));
+		draw_line(pos+ Vector2(size-1, size-1), pos + Vector2(size-1, 0), Color(0.5,0.5,0.5));*/
 	}
+	//virtual void draw_rect(RID p_canvas_item, const Rect2 &p_rect, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, const Ref<Texture> &p_normal_map = Ref<Texture>()) const;
+
+
+	//bool filter_clip;
+	//_get_rects(src_rect, dst_rect, filter_clip);
+	//m_testTexture->draw_rect_region(ci, dst_rect, src_rect, Color(1, 1, 1), false, normal_map, filter_clip);*/
 }
 
 Rect2 AuroraWorldRenderer::_edit_get_rect() const
@@ -405,7 +396,7 @@ Rect2 AuroraWorldRenderer::_edit_get_rect() const
     if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_targetWorld != nullptr && m_targetWorld->GetLevels().size() > 0)
 	{
         Level* firstLevel = m_targetWorld->GetLevels()[0];
-        return Rect2(Vector2(0, 0) , firstLevel->GetSizeMm().ToVector2() * MmToGodot);
+        return Rect2(MeterPositionToGodot(firstLevel->GetLevelBottomLeftPosition()) , MeterPositionToGodot(firstLevel->GetLevelSize()));
 	}
 	return Rect2(0, 0, 0, 0);
 }

@@ -19,48 +19,46 @@ struct int2
 typedef Scalar Energy;
 typedef Scalar Quantity;
 
-typedef int32_t Mm; // Mm
-typedef Scalar Volume; // m2
+//typedef int32_t Mm; // Mm
+typedef Scalar Volume; // m3
 typedef Scalar Meter; // m
 
-Volume MmSquareToVolume(Mm size);
-Meter MmToMeter(Mm length);
+//Volume MmSquareToVolume(Mm size);
+//Meter MmToMeter(Mm length);
 
-struct Mm2
+struct Meter2
 {
-    Mm2(Mm xy);
-    Mm2(Mm iX, Mm iY);
+    Meter2(Meter xy);
+    Meter2(Meter iX, Meter iY);
 
-    Mm x;
-    Mm y;
+    Meter x;
+    Meter y;
 
-    Mm2 operator+(Mm2 const& p_v) const;
-    Mm2 operator*(Mm v) const;
-    bool operator==(Mm2 const&p_v) const { return x== p_v.x && y == p_v.y; }
+    Meter2 operator+(Meter2 const& p_v) const;
+    Meter2 operator*(Meter v) const;
+    bool operator==(Meter2 const&p_v) const { return x== p_v.x && y == p_v.y; }
 
     Vector2 ToVector2() const;
 };
 
-
-
-struct MmRect
+struct MeterRect
 {
-    MmRect();
-    MmRect(Mm2 iPosition, Mm2 iSize);
-    MmRect(Mm x, Mm y, Mm width, Mm height);
+    MeterRect();
+    MeterRect(Meter2 iPosition, Meter2 iSize);
+    MeterRect(Meter x, Meter y, Meter width, Meter height);
 
-    MmRect Clip(MmRect const& p_rect) const;
-    bool Intersects(MmRect const&p_rect) const;
+    MeterRect Clip(MeterRect const& p_rect) const;
+    bool Intersects(MeterRect const&p_rect) const;
 
     inline bool IsEmpty() const {
         return (size.x <= 0 || size.y <= 0);
     }
 
-    bool operator==(MmRect const&p_rect) const { return position== p_rect.position && size == p_rect.size; }
+    bool operator==(MeterRect const&p_rect) const { return position== p_rect.position && size == p_rect.size; }
 
 
-    Mm2 position;
-    Mm2 size;
+    Meter2 position;
+    Meter2 size;
 };
 
 

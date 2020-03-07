@@ -20,10 +20,13 @@ void WorldEditor::GenerateTestWorld1()
 {
     int blockCountX = 2;
     int blockCountY = 80;
-    Mm tileSizeMm = 50;
-    Level* surfaceLevel = m_world.CreateLevel(false, tileSizeMm, 0, blockCountX, blockCountY); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
-    int surfaceWidth = surfaceLevel->GetSizeMm().x;
-    int surfaceHeight = surfaceLevel->GetSizeMm().y;
+    Meter tileSize = 0.050;
+    Meter2 levelPosition(0, 0);
+    Meter levelDepth = 100;
+
+    Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, false); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    int surfaceWidth = surfaceLevel->GetLevelSize().x;
+    int surfaceHeight = surfaceLevel->GetLevelSize().y;
 
     TileComposition dryAir;
     // No solid
@@ -35,22 +38,25 @@ void WorldEditor::GenerateTestWorld1()
     dryAir.Gas.composition[Gas::Oxygen] = 20;
     dryAir.Gas.pressure = 100000. ; // 1 bar
     dryAir.Gas.temperature = 274.; // 0 degree C
-    PaintTiles(surfaceLevel,  dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
+    PaintTiles(surfaceLevel,  dryAir,  MeterRect(0,0, surfaceWidth,surfaceHeight));
 
     TileComposition highPressureDryAir = dryAir;
     highPressureDryAir.Gas.pressure = 100000 * 1. ;
     highPressureDryAir.Gas.temperature = 274. + 500 *  0.5;
-    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(0, 30 * surfaceHeight/ blockCountY, surfaceWidth/ blockCountX, 30 * surfaceHeight/ blockCountY));
+    PaintTiles(surfaceLevel, highPressureDryAir,  MeterRect(0, 30 * surfaceHeight/ blockCountY, surfaceWidth/ blockCountX, 30 * surfaceHeight/ blockCountY));
 }
 
 void WorldEditor::GenerateTestWorld2()
 {
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
-    Mm tileSizeMm = 500;
     int blockCountX = 80;
     int blockCountY = 80;
-    Level* surfaceLevel = m_world.CreateLevel(false, tileSizeMm, 0, blockCountX, blockCountY); // 20 x 20 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Meter tileSize = 0.5;
+    Meter2 levelPosition(0, 0);
+    Meter levelDepth = 100;
+
+    Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, false); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
 
 
     TileComposition dryAir;
@@ -80,9 +86,9 @@ void WorldEditor::GenerateTestWorld2()
     hotDryAir.Gas.pressure = 100000*0.1;
 
 
-    int surfaceWidth = surfaceLevel->GetSizeMm().x;
-    int surfaceHeight = surfaceLevel->GetSizeMm().y;
-    PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
+    int surfaceWidth = surfaceLevel->GetLevelSize().x;
+    int surfaceHeight = surfaceLevel->GetLevelSize().y;
+    PaintTiles(surfaceLevel, dryAir,  MeterRect(0,0, surfaceWidth,surfaceHeight));
     //PaintTiles(surfaceLevel, hotDryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
 
 
@@ -90,17 +96,21 @@ void WorldEditor::GenerateTestWorld2()
 
     TileComposition highPressureDryAir = dryAir;
     highPressureDryAir.Gas.pressure = 100000 * 200;
-    highPressureDryAir.Gas.temperature = 274.+500*10; 
-    PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(surfaceWidth / 4, 2*surfaceHeight/3, surfaceHeight / 32, surfaceHeight / 32));
+    highPressureDryAir.Gas.temperature = 274.+500*10;
+    PaintTiles(surfaceLevel, highPressureDryAir,  MeterRect(surfaceWidth / 4, 2*surfaceHeight/3, surfaceHeight / 32, surfaceHeight / 32));
     //PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(0, 3*surfaceHeight/4, surfaceWidth-5* tileSizeMm, surfaceHeight / 4));
 }
 
 
 void WorldEditor::GenerateTestWorld3()
 {
+    int blockCountX = 50;
+    int blockCountY = 20;
+    Meter tileSize = 0.05;
+    Meter2 levelPosition(0, 0);
+    Meter levelDepth = 100;
 
-    Level* surfaceLevel = m_world.CreateLevel(true, 50, 12, 5, 2); // 20 x 5 blocks = 4096 m x 1024 m
-
+    Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, true); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
     //cave1 = m_world.CreateLevel(64, 1,1); // 1 x 1 block = 64 m x 64 m
 
 
@@ -126,10 +136,10 @@ void WorldEditor::GenerateTestWorld3()
     clayRock.AddSolidVolume(Solid::Clay, 1000);
     clayRock.AddSolidVolume(Solid::Gold, 1);
 
-    int surfaceWidth = surfaceLevel->GetSizeMm().x;
-    int surfaceHeight = surfaceLevel->GetSizeMm().y;
-    PaintTiles(surfaceLevel, dryAir,  MmRect(0,0, surfaceWidth,surfaceHeight/3));
-    PaintTiles(surfaceLevel, clayRock,  MmRect(0, surfaceHeight/3, surfaceWidth, surfaceHeight));
+    int surfaceWidth = surfaceLevel->GetLevelSize().x;
+    int surfaceHeight = surfaceLevel->GetLevelSize().y;
+    PaintTiles(surfaceLevel, dryAir,  MeterRect(0,0, surfaceWidth,surfaceHeight/3));
+    PaintTiles(surfaceLevel, clayRock,  MeterRect(0, surfaceHeight/3, surfaceWidth, surfaceHeight));
 
             //PaintTile(Rect2(0,0, worldWidth,worldHeight/2), air);
             //PaintTile(Rect2(0,worldHeight/3, worldWidth,2 * worldHeight/3), limestoneRock);
@@ -174,59 +184,36 @@ void WorldEditor::GenerateTestWorld3()
     //Repack();
 }
 
-void WorldEditor::PaintTiles(Level* level, TileComposition const& composition, MmRect area)
+void WorldEditor::PaintTiles(Level* level, TileComposition const& composition, MeterRect area)
 {
-    for(Tile* tile : level->GetRootTiles())
+    for(Tile* tile : level->GetTiles())
     {
         PaintTile(level, tile, composition, area);
     }
 }
 
-void WorldEditor::PaintTile(Level* level, Tile* tile, TileComposition const& composition, MmRect area)
+void WorldEditor::PaintTile(Level* level, Tile* tile, TileComposition const& composition, MeterRect area)
 {
     //printf("PaintTile area=%ls tile_area=%ls\n", String(area).c_str(), String(m_worldArea).c_str());
 
     switch(tile->IsInside(area))
     {
     case Tile::InsideMode::Yes:
-    {
-        //printf("inside: Yes\n");
-        // All the tile is in the target area, put the material everywhere
-        SetTileComposition(tile, composition);
-    }
-    break;
     case Tile::InsideMode::Partially:
     {
-        //printf("inside: Partially\n");
-        if(tile->Split(level))
-        {
-            //printf("split ok\n");
-            for(Tile* child: tile->GetChildren())
-            {
-                //printf("split child\n");
-                PaintTile(level, child, composition, area);
-            }
-            //printf("split done\n");
-        }
-        else
-        {
-            //printf("split ko\n");
-            // Cannot split more, already at min size, override
-            SetTileComposition(tile, composition);
-        }
+        SetTileComposition(tile, composition);
     }
-    break;
     case Tile::InsideMode::No:
-        //printf("inside: No\n");
     break;
     }
 }
 
 void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
 {
-    Volume volume = tile->GetVolume();
+    Volume volume = tile->GetTotalVolume();
 
-    TileContent newContent(volume, 0);
+    //TileContent newContent(volume, 0);
+    tile->ClearContent();
 
     if(composition.solids.size() > 0)
     {
@@ -251,13 +238,13 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
             //Energy thermalEnergy = PhysicalConstants::EstimateThermalEnergy(solid.solid, solidN, composition.solidTemperature);
             Energy thermalEnergy = 0; // TODO
 
-            newContent.AddSolid(solid.solid, solidN, thermalEnergy);
+            tile->AddSolid(solid.solid, solidN, thermalEnergy);
         }
     }
 
     if(composition.liquids.size() > 0)
     {
-        Volume availableVolume = newContent.GetTotalVolume() - newContent.GetSolidsVolume();
+        Volume availableVolume = tile->GetTotalVolume() - tile->GetSolidsVolume();
 
          for (TileLiquidVolume& liquid : composition.liquids) {
             Volume liquidVolume = Volume(availableVolume * liquid.volumeProportion);
@@ -272,7 +259,7 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
             // TODO
             //thermalEnergy += PhysicalConstants::EstimateThermalEnergy(PhysicalConstants::GetDissolvedMaterial(liquid.liquid), dissolvedQuantity, liquid.temperature);
 
-            newContent.AddLiquid(liquid.liquid, liquidQuantity, dissolvedQuantity, thermalEnergy);
+            tile->AddLiquid(liquid.liquid, liquidQuantity, dissolvedQuantity, thermalEnergy);
          }
     }
 
@@ -284,7 +271,7 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
 
     if(GasPartSum > 0)
     {
-        Volume gasVolume = newContent.GetGasVolume();
+        Volume gasVolume = tile->GetGasVolume();
         Quantity totalN = PhysicalConstants::EstimateGasN(gasVolume, composition.Gas.pressure, composition.Gas.temperature);
 
         for (Gas gas : AllGas())
@@ -300,13 +287,12 @@ void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
             totalN -= GasN;
             GasPartSum-= composition.Gas.composition[gas];
 
-            Energy thermalEnergy = PhysicalConstants::EstimateInternalEnergy(gas, GasN, composition.Gas.temperature, gasVolume);
+            Energy internalEnergy = PhysicalConstants::EstimateInternalEnergy(gas, GasN, composition.Gas.temperature, gasVolume);
 
-            newContent.AddGas(gas, GasN, thermalEnergy);
+            tile->AddGas(gas, GasN, internalEnergy);
         }
     }
-    tile->SetContent(newContent);
-    tile->GetContent()->GetGazNode().ComputeCache();
+    tile->GetGazNode().ComputeCache();
 }
 
 void TileComposition::AddLiquidVolume(Liquid liquid, Scalar volumeProportion, Scalar dissolvedProportion, Scalar temperature, Scalar pressure)

@@ -4,109 +4,75 @@
 
 namespace aurora {
 
-int const Level::TileChildEdgeCount = 2; // 2 or modify 1<<maxTileSubdivision
-int const Level::TileChildCount = Level::TileChildEdgeCount * Level::TileChildEdgeCount;
-
-
-Level::Level(bool horizontalLoop, Mm minTileSize, int maxTileSubdivision, int rootTileHCount, int rootTileVCount)
-    : m_minTileSize(minTileSize)
-    , m_maxTileSize(minTileSize * (1<<maxTileSubdivision))
-    , m_size(Mm2(rootTileHCount, rootTileVCount) * m_maxTileSize)
+Level::Level(Meter2 levelBottomLeftPosition, Meter tileSize, Meter levelDepth, int tileHCount, int tileVCount, bool horizontalLoop)
+    : m_tileSize(tileSize)
+    , m_levelDepth(levelDepth)
+    , m_tileHCount(tileHCount)
+    , m_tileVCount(tileVCount)
+    , m_levelSize(Meter2(tileHCount, tileVCount) * tileSize)
+    , m_levelBottomLeftPosition(levelBottomLeftPosition)
     , m_horizontalLoop(horizontalLoop)
 
 {
-    size_t worldRootTileCount = size_t(rootTileHCount *  rootTileVCount);
-    m_rootTiles.reserve(worldRootTileCount);
+    size_t worldRootTileCount = size_t(m_tileHCount *  m_tileVCount);
+    m_tiles.reserve(worldRootTileCount);
 
-    for(int x = 0; x < rootTileHCount; x++)
+    for(int y = 0; y < m_tileVCount; y++)
     {
-        for(int y = 0; y < rootTileVCount; y++)
+        for(int x = 0; x < m_tileHCount; x++)
         {
-            Tile* tile = new Tile(m_maxTileSize, Mm2(x * m_maxTileSize, y * m_maxTileSize));
-            m_rootTiles.emplace_back(tile);
+            Tile* tile = new Tile(m_tileSize, levelBottomLeftPosition + Meter2(x * m_tileSize, y * m_tileSize), m_levelDepth);
+            m_tiles.emplace_back(tile);
         }
     }
 
-    printf("new Level: %lu tiles created\n", m_rootTiles.size());
+    printf("new Level: %lu tiles created\n", m_tiles.size());
 }
 
+void Level::ForEachTransition(std::function<void(Tile* tileA, Tile* tileB, Transition::Direction direction)> callback)
+{
+    // Vertical transition, skip top line
+    for(int y = 0; y < m_tileVCount - 1; y++)
+    {
+        for(int x = 0; x < m_tileHCount; x++)
+        {
+            callback(GetTileAtIndex(x, y), GetTileAtIndex(x, y + 1), Transition::Direction::DIRECTION_UP);
+        }
+    }
 
+    // Horizontal transition, skip right line
+    for(int y = 0; y < m_tileVCount; y++)
+    {
+        for(int x = 0; x < m_tileHCount -1; x++)
+        {
+            callback(GetTileAtIndex(x, y), GetTileAtIndex(x + 1, y), Transition::Direction::DIRECTION_RIGHT);
+        }
+    }
+
+    if(m_horizontalLoop && m_tileHCount > 1)
+    {
+        // Horizontal loop transition, last right line only
+        for(int y = 0; y < m_tileVCount; y++)
+        {
+            callback(GetTileAtIndex(m_tileHCount - 1, y), GetTileAtIndex(0, y), Transition::Direction::DIRECTION_RIGHT);
+        }
+    }
+}
+
+Tile* Level::GetTileAtIndex(int x, int y)
+{
+    size_t index = x + y * m_tileHCount;
+    return m_tiles[index];
+}
+
+/*
 void Level::FindTileAt(std::vector<Tile*>& matchs, MmRect area)
 {
     for(Tile* tile : m_rootTiles)
     {
         tile->FindTileAt(matchs, area);
     }
-}
-
-
-
-//scalar const AuroraWorld::MinTileSize = 0.0625;
-
-//scalar const AuroraWorld::TileChildCount = AuroraWorld::TileChildEdgeCount * AuroraWorld::TileChildEdgeCount;
-
-//AuroraWorld::~AuroraWorld()
-//{
-//	for(AuroraTile* tile : m_rootTiles)
-//	{
-//		delete tile;
-//	}
-//}
-
-//void AuroraWorld::add(int value) {
-
-//    count += value;
-//}
-
-//void AuroraWorld::reset() {
-
-//    count = 0;
-//}
-
-//int AuroraWorld::get_total() const {
-
-//    return count;
-//}
-
-//void AuroraWorld::_bind_methods() {
-
-//	ClassDB::bind_method(D_METHOD("add", "value"), &AuroraWorld::add);
-//	ClassDB::bind_method(D_METHOD("reset"), &AuroraWorld::reset);
-//	ClassDB::bind_method(D_METHOD("get_total"), &AuroraWorld::get_total);
-//}
-
-//AuroraWorld::AuroraWorld() {
-//    count = 0;
-//	printf("plop1\n");
-//    WorldEditor worldEditor(*this);
-//    worldEditor.GenerateTestWord();
-//}
-
-//void AuroraWorld::Generate()
-//{
-
-//}
-
-//void AuroraWorld::PaintTile(Rect2 area, AuroraMaterial const& material)
-//{
-//	for(AuroraTile* tile : m_rootTiles)
-//	{
-//		tile->PaintTile(area, material);
-//	}
-//}
-
-//void AuroraWorld::Repack()
-//{
-//	for(AuroraTile* tile : m_rootTiles)
-//	{
-//		tile->Repack();
-//	}
-//}
-
-//Rect2 AuroraWorld::GetWorldArea() const
-//{
-//	return m_worldArea;
-//}
+}*/
 
 }
 

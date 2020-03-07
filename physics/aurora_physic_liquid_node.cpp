@@ -5,7 +5,7 @@ namespace aurora {
 
 LiquidNode::LiquidNode(Liquid liquid)
     : m_liquid(liquid)
-    , m_altitude(0)
+    , m_centerAltitude(0)
     , m_volume(0)
     , m_N(0)
     , m_dissolvedN(0)
