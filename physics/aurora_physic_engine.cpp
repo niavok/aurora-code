@@ -3,6 +3,8 @@
 #include "aurora_physic_gas_node.h"
 #include "aurora_physic_constants.h"
 
+#include "core/os/os.h"
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -11,7 +13,6 @@
 namespace aurora {
 
 PhysicEngine::PhysicEngine()
-    : m_stepState(TRANSITION_APPLIED)
 {
     PhysicalConstants::Init();
 }
@@ -55,111 +56,33 @@ char * sprintf_int128( __int128_t n ) {
 
 void PhysicEngine::Step(Scalar delta)
 {
-#if ENERGY_CHECK
-     Scalar initialTotalEnergy = ComputeEnergy("initial");
-    Quantity initialTotalN = 0;
-    for(FluidNode* node : m_nodes)
-    {
-       // initialTotalEnergy += node->GetInternalEnergy();
-        initialTotalN += node->GetCheckN();
-    }
-#endif
-    if(m_stepState !=  TRANSITION_APPLIED)
-    {
-        SubStep(delta);
-    }
-    else
-    {
-        PrepareTransitions();
-        ComputeTransitions(delta);
-        ApplyTransitionsToNodes();
-        ApplyTransitionsInput();
-    }
+    static int stepCount = 0;
+    printf("PhysicEngine::Step %d", stepCount);
+    stepCount++;
 
-#if ENERGY_CHECK
-    Quantity finalTotalN = 0;
-    for(FluidNode* node : m_nodes)
-    {
-        finalTotalN += node->GetCheckN();
-    }
+    uint64_t tsStart = OS::get_singleton()->get_ticks_usec();
 
-    Scalar check = ComputeEnergy("after all step");
-#endif
-    // assert((initialTotalEnergy - check) < 1e-1); TODO repair
-    //assert(initialTotalN - finalTotalN < 1e-6);
+    PrepareTransitions();
+    uint64_t tsPrepareTransitions = OS::get_singleton()->get_ticks_usec();
+    ComputeTransitions(delta);
+    uint64_t tsComputeTransitions = OS::get_singleton()->get_ticks_usec();
+    ApplyTransitionsToNodes();
+    uint64_t tsApplyTransitions = OS::get_singleton()->get_ticks_usec();
+    ApplyTransitionsInput();
+    uint64_t tsApplyTransitionsInput = OS::get_singleton()->get_ticks_usec();
 
+    int64_t totalDuration = tsApplyTransitionsInput - tsStart;
+    int64_t prepareTransitionsDuration = tsPrepareTransitions - tsStart;
+    int64_t computeTransitionsDuration = tsComputeTransitions - tsPrepareTransitions;
+    int64_t applyTransitionsDuration = tsApplyTransitions - tsComputeTransitions;
+    int64_t applyTransitionsInputDuration = tsApplyTransitionsInput - tsApplyTransitions;
 
-#if 0
-    {
-        for(int i = 0; i < 4; i++)
-        {
-            GasNode* node =(GasNode*) m_nodes[80*(40+i)+70];
-            //node->AddThermalEnergy(10000 * node->GetN());
-            node->AddThermalEnergy(0.002 * node->GetN());
-            node->ComputeCache();
-            //printf("N=%ld\n",node->GetN());
-        }
-    }
-#endif
-
-#if 0
-    {
-        for(int i = 0; i < 80; i++)
-        {
-            GasNode* node =(GasNode*) m_nodes[i * 80];
-            //node->AddThermalEnergy(10000 * node->GetN());
-
-            //node->AddThermalEnergy(-0.1 * node->GetN());
-            node->TakeThermalEnergy(0.0002 * node->GetThermalEnergy());
-            node->ComputeCache();
-            //printf("N=%ld\n",node->GetN());
-        }
-    }
-#endif
-}
-
-void PhysicEngine::SubStep(Scalar delta)
-{
-#if ENERGY_CHECK
-    Scalar initialTotalEnergy = ComputeEnergy("initial");
-    __int128 initialTotalN = 0;
-    for(FluidNode* node : m_nodes)
-    {
-       // initialTotalEnergy += node->GetInternalEnergy();
-        initialTotalN += node->GetCheckN();
-    }
-#endif
-
-    switch (m_stepState)
-    {
-    case TRANSITION_APPLIED:
-        PrepareTransitions();
-        m_stepState = TRANSITION_PREPARED;
-        break;
-    case TRANSITION_PREPARED:
-        ComputeTransitions(delta);
-        m_stepState = TRANSITION_COMPUTED;
-    break;
-    case TRANSITION_COMPUTED:
-        ApplyTransitionsToNodes();
-        ApplyTransitionsInput();
-        m_stepState = TRANSITION_APPLIED;
-    break;
-    default:
-        break;
-    }
-
-#if ENERGY_CHECK
-     __int128 finalTotalN = 0;
-    for(FluidNode* node : m_nodes)
-    {
-        finalTotalN += node->GetCheckN();
-    }
-
-    Scalar check = ComputeEnergy("after all step");
-    assert((initialTotalEnergy - check) < 1e-8);
-    assert(initialTotalN == finalTotalN);
-#endif
+    printf(" in %ld us (%ld us - %ld us - %ld us - %ld us)\n",
+        totalDuration,
+        prepareTransitionsDuration,
+        computeTransitionsDuration,
+        applyTransitionsDuration,
+        applyTransitionsInputDuration);
 }
 
 Energy PhysicEngine::ComputeEnergy(const char* label)
@@ -225,10 +148,7 @@ void PhysicEngine::ApplyTransitionsInput()
 
 void PhysicEngine::ComputeTransitions(Scalar delta)
 {
-    static int stepCount = 0;
-    printf("PhysicEngine::Step %d\n", stepCount);
-
-    stepCount++;
+   
 
     for(Transition* transition : m_transitions)
     {
