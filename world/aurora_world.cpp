@@ -134,11 +134,7 @@ void AuroraWorld::SetPause(bool pause)
 
 void AuroraWorld::Step()
 {
-    for(int i = 0; i < 80 ; i++)
-    {
-        m_physicEngine.Step(0.1);
-    }
-
+    m_physicEngine.Step(0.1);
 }
 
 //Rect2 AuroraWorld::GetWorldArea() const
