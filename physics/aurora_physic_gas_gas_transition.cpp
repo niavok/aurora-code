@@ -416,7 +416,7 @@ void GasGasTransition::Step(Scalar delta)
     }
 
     Energy energyCheckError = initialCheckEnergy - finalCheckEnergy;
-    assert(std::abs(energyCheckError) < 1e-7);
+    assert(std::abs(energyCheckError) < 1e-6);
 
     m_kineticEnergy = newLocalKineticEnergy;
 }

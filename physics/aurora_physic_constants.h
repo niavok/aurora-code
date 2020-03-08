@@ -13,7 +13,7 @@ public:
     static constexpr Scalar kineticCoef = 1; // Energy of a mass moving througth a transition
     static constexpr Scalar potentialEnergyCoef = 1; // Energy of a mass moving througth a transition
     static constexpr Scalar gasViscosity = 0.99;
-    static constexpr Scalar gasKineticLossRatio = 0.001;
+    static constexpr Scalar gasKineticLossRatio = 0.0005;
     static constexpr Scalar gasAdiabaticIndex = 1.3;
     static constexpr Scalar gasElasticCoef = gasAdiabaticIndex / (gasAdiabaticIndex - 1);
 

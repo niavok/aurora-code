@@ -134,7 +134,10 @@ void AuroraWorld::SetPause(bool pause)
 
 void AuroraWorld::Step()
 {
-    m_physicEngine.Step(0.1);
+    for(int i = 0; i < 80 ; i++)
+    {
+        m_physicEngine.Step(0.1);
+    }
 
 }
 

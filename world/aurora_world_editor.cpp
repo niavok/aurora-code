@@ -51,7 +51,7 @@ void WorldEditor::GenerateTestWorld2()
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
     int blockCountX = 80;
-    int blockCountY = 80;
+    int blockCountY = 300;
     Meter tileSize = 0.5;
     Meter2 levelPosition(0, 0);
     Meter levelDepth = 100;
@@ -96,8 +96,8 @@ void WorldEditor::GenerateTestWorld2()
 
     TileComposition highPressureDryAir = dryAir;
     highPressureDryAir.Gas.pressure = 100000 * 200;
-    highPressureDryAir.Gas.temperature = 274.+500*10;
-    PaintTiles(surfaceLevel, highPressureDryAir,  MeterRect(surfaceWidth / 4, 2*surfaceHeight/3, surfaceHeight / 32, surfaceHeight / 32));
+    highPressureDryAir.Gas.temperature = 274.+2000;
+    PaintTiles(surfaceLevel, highPressureDryAir,  MeterRect(surfaceWidth / 4, 1*surfaceHeight/3, tileSize * 4, tileSize * 4));
     //PaintTiles(surfaceLevel, highPressureDryAir,  MmRect(0, 3*surfaceHeight/4, surfaceWidth-5* tileSizeMm, surfaceHeight / 4));
 }
 
