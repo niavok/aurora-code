@@ -25,8 +25,8 @@ void WorldEditor::GenerateTestWorld1()
     Meter levelDepth = 100;
 
     Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, false); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
-    int surfaceWidth = surfaceLevel->GetLevelSize().x;
-    int surfaceHeight = surfaceLevel->GetLevelSize().y;
+    Meter surfaceWidth = surfaceLevel->GetLevelSize().x;
+    Meter surfaceHeight = surfaceLevel->GetLevelSize().y;
 
     TileComposition dryAir;
     // No solid
@@ -51,8 +51,8 @@ void WorldEditor::GenerateTestWorld2()
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
     int blockCountX = 80;
-    int blockCountY = 300;
-    Meter tileSize = 0.5;
+    int blockCountY = 80;
+    Meter tileSize = 0.05;
     Meter2 levelPosition(0, 0);
     Meter levelDepth = 100;
 
@@ -86,8 +86,8 @@ void WorldEditor::GenerateTestWorld2()
     hotDryAir.Gas.pressure = 100000*0.1;
 
 
-    int surfaceWidth = surfaceLevel->GetLevelSize().x;
-    int surfaceHeight = surfaceLevel->GetLevelSize().y;
+    Meter surfaceWidth = surfaceLevel->GetLevelSize().x;
+    Meter surfaceHeight = surfaceLevel->GetLevelSize().y;
     PaintTiles(surfaceLevel, dryAir,  MeterRect(0,0, surfaceWidth,surfaceHeight));
     //PaintTiles(surfaceLevel, hotDryAir,  MmRect(0,0, surfaceWidth,surfaceHeight));
 
@@ -136,8 +136,8 @@ void WorldEditor::GenerateTestWorld3()
     clayRock.AddSolidVolume(Solid::Clay, 1000);
     clayRock.AddSolidVolume(Solid::Gold, 1);
 
-    int surfaceWidth = surfaceLevel->GetLevelSize().x;
-    int surfaceHeight = surfaceLevel->GetLevelSize().y;
+    Meter surfaceWidth = surfaceLevel->GetLevelSize().x;
+    Meter surfaceHeight = surfaceLevel->GetLevelSize().y;
     PaintTiles(surfaceLevel, dryAir,  MeterRect(0,0, surfaceWidth,surfaceHeight/3));
     PaintTiles(surfaceLevel, clayRock,  MeterRect(0, surfaceHeight/3, surfaceWidth, surfaceHeight));
 
@@ -202,6 +202,7 @@ void WorldEditor::PaintTile(Level* level, Tile* tile, TileComposition const& com
     case Tile::InsideMode::Partially:
     {
         SetTileComposition(tile, composition);
+    break;
     }
     case Tile::InsideMode::No:
     break;

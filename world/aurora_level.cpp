@@ -26,7 +26,7 @@ Level::Level(Meter2 levelBottomLeftPosition, Meter tileSize, Meter levelDepth, i
         }
     }
 
-    printf("new Level: %lu tiles created\n", m_tiles.size());
+    printf("new Level: %lu tiles created (%f x %f m)\n", m_tiles.size(), m_levelSize.x, m_levelSize.y);
 }
 
 void Level::ForEachTransition(std::function<void(Tile* tileA, Tile* tileB, Transition::Direction direction)> callback)
