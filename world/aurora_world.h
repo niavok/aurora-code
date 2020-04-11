@@ -20,6 +20,8 @@ class AuroraWorld : public Node {
 
     int count;
 
+    int64_t get_last_update_duration();
+
 protected:
     static void _bind_methods();
     void _notification(int p_what);
@@ -47,6 +49,7 @@ private:
 
     PhysicEngine m_physicEngine;
     bool m_isPaused;
+    int64_t m_lastUpdateDuration;
 };
 
 }

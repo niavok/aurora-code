@@ -2,6 +2,8 @@
 #include "aurora_world_editor.h"
 #include "aurora_level.h"
 
+#include "core/os/os.h"
+
 #include "../physics/aurora_physic_gas_gas_transition.h"
 
 #include <assert.h>
@@ -11,13 +13,17 @@ namespace aurora {
 AuroraWorld::AuroraWorld()
     : m_isPaused(true)
 {
+    printf("AuroraWorld\n");
+
     //count = 0;
     printf("plop1\n");
     WorldEditor worldEditor(*this);
     //worldEditor.GenerateTestWorld1();
     worldEditor.GenerateTestWorld2();
 
+    printf("InitPhysics done\n");
     InitPhysics();
+    printf("AuroraWorld done\n");
 }
 
 AuroraWorld::~AuroraWorld()
@@ -32,6 +38,8 @@ void AuroraWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_pause", "pause"), &AuroraWorld::SetPause);
     ClassDB::bind_method(D_METHOD("is_paused"), &AuroraWorld::IsPaused);
     ClassDB::bind_method(D_METHOD("step"), &AuroraWorld::Step);
+
+    ClassDB::bind_method(D_METHOD("get_last_update_duration"), &AuroraWorld::get_last_update_duration);
 }
 
 
@@ -49,8 +57,15 @@ void AuroraWorld::_notification(int p_what) {
 }
 
 
+
+int64_t AuroraWorld::get_last_update_duration()
+{
+	return m_lastUpdateDuration;
+}
+
 void AuroraWorld::Update(Scalar delta)
 {
+    uint64_t tsStart = OS::get_singleton()->get_ticks_usec();
     if(!m_isPaused)
     {
         //for(int i = 0; i < 20 ; i++)
@@ -58,6 +73,8 @@ void AuroraWorld::Update(Scalar delta)
             m_physicEngine.Step(delta);
         }
     }
+    uint64_t tsEnd = OS::get_singleton()->get_ticks_usec();
+	m_lastUpdateDuration = tsEnd - tsStart;
 }
 
 Level* AuroraWorld::CreateLevel(Meter2 levelBottomLeftPosition, Meter tileSize, Meter depth, int tileHCount, int tileVCount, bool horizontalLoop)

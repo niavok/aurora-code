@@ -14,7 +14,7 @@ GasNode::GasNode()
     , m_height(0)
     , m_inputInternalEnergy(0)
     , m_outputInternalEnergy(0)
-    , m_movingN(0)
+    //, m_movingN(0)
 {
     for(Gas gas : AllGas())
     {
@@ -28,7 +28,7 @@ GasNode::GasNode(GasNode& node)
     , m_volume(node.m_volume)
     , m_inputInternalEnergy(node.m_inputInternalEnergy)
     , m_outputInternalEnergy(node.m_outputInternalEnergy)
-    , m_movingN(node.m_movingN)
+    //, m_movingN(node.m_movingN)
     , m_cacheComputed(false)
 {
     for(Gas gas : AllGas())
@@ -107,7 +107,6 @@ Quantity GasNode::GetOutputN(Gas gas) const
 
 void GasNode::PrepareTransitions()
 {
-    //MigrateKineticEnergy();
 }
 
 void GasNode::MigrateKineticEnergy()
@@ -363,38 +362,7 @@ void GasNode::MigrateKineticEnergy()
 
 void GasNode::ApplyTransitions()
 {
-    Quantity NDiff = 0;
-    Energy EDiff = 0;
-
-    for(TransitionLink& transitionLink : m_transitionLinks)
-    {
-        Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
-        
-        EDiff += link->outputInternalEnergy;
-
-        for(Gas gas : AllGas())
-        {
-            Quantity quantity = link->outputMaterial[gas];
-            NDiff += quantity;
-        }
-    }
-
-    Quantity futureQty = m_cacheN + NDiff;
-    Quantity futureE = m_inputInternalEnergy + m_outputInternalEnergy + EDiff;
-
-    if(futureQty < 0)
-    {
-        printf("futureQty %f\n", futureQty);
-    }
-
-     if(futureE < 0)
-    {
-        printf("futureE %f\n", futureE);
-    }
-
-
-
-    m_movingN = 0;
+    //m_movingN = 0;
     bool isFlushNeeded = false;
 
     // Apply transition output
@@ -540,7 +508,8 @@ void GasNode::ComputeCache()
     }
 
     // Compute elastic energy
-    Quantity pressureN = m_cacheN - m_movingN; // Exclude moving N from pressure computation
+    //Quantity pressureN = m_cacheN - m_movingN; // Exclude moving N from pressure computation
+    Quantity pressureN = m_cacheN;
     Energy internalEnergy = m_inputInternalEnergy + m_outputInternalEnergy;
     Scalar A = pressureN * PhysicalConstants::gasConstant / (m_volume * m_cacheEnergyPerK);
     m_cachePressure = A * internalEnergy / (1 + A*m_volume * PhysicalConstants::gasElasticCoef);
@@ -632,11 +601,11 @@ Quantity GasNode::GetInputN() const
     assert(m_cacheComputed);
     return m_cacheInputN;
 }
-
+/*
 Quantity GasNode::GetMovingN() const
 {
     return m_movingN;
-}
+}*/
 
 Scalar GasNode::GetPressureGradient() const
 {

@@ -177,7 +177,10 @@ static bool isInit = false;
 
 void PhysicalConstants::Init()
 {
-    assert(!isInit);
+    if(isInit)
+    {
+        return;
+    }
 
     Gas gas;
     // H2

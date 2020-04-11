@@ -34,7 +34,7 @@ public:
     Scalar GetInputTemperature() const;
     Scalar GetOutputTemperature() const;
     Quantity GetN() const;
-    Quantity GetMovingN() const;
+    //Quantity GetMovingN() const;
     Scalar GetPressureGradient() const;
     Quantity GetOutputN() const;
     Quantity GetInputN() const;
@@ -82,7 +82,7 @@ private:
     GasComposition m_outputNComposition;
     Energy m_inputInternalEnergy;
     Energy m_outputInternalEnergy;
-    Quantity m_movingN;
+    //Quantity m_movingN;
 
     // Cache
     bool m_cacheComputed;

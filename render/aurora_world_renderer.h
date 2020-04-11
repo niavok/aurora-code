@@ -35,6 +35,8 @@ public:
 	void set_texture2(const Ref<Texture> &p_texture);
 	Ref<Texture> get_texture2() const;
 
+	int64_t get_last_render_duration();
+
 private:
 
 	void DrawWorld(RID& ci);
@@ -48,6 +50,7 @@ private:
 	Ref<Texture> m_testTexture2;
     Control *m_control;
     Ref<Font> m_debugFont;
+	int64_t m_lastRenderDuration;
 };
 
 }

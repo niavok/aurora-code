@@ -1,6 +1,6 @@
 #include "aurora_world_renderer.h"
 #include "scene/2d/sprite.h"
-
+#include "core/os/os.h"
 
 #include "../world/aurora_world.h"
 #include "../world/aurora_tile.h"
@@ -75,6 +75,8 @@ void AuroraWorldRenderer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_texture1"), &AuroraWorldRenderer::get_texture1);
 	ClassDB::bind_method(D_METHOD("set_texture2", "texture"), &AuroraWorldRenderer::set_texture2);
 	ClassDB::bind_method(D_METHOD("get_texture2"), &AuroraWorldRenderer::get_texture2);
+
+	ClassDB::bind_method(D_METHOD("get_last_render_duration"), &AuroraWorldRenderer::get_last_render_duration);
 
 
 
@@ -181,15 +183,24 @@ Ref<Texture> AuroraWorldRenderer::get_texture2() const {
 	return m_testTexture2;
 }
 
+int64_t AuroraWorldRenderer::get_last_render_duration()
+{
+	return m_lastRenderDuration;
+}
+
 static int drawTileCount;
 
 void AuroraWorldRenderer::DrawWorld(RID& ci)
 {
+	uint64_t tsStart = OS::get_singleton()->get_ticks_usec();
+
     for(Level* level : m_targetWorld->GetLevels())
     {
         DrawLevel(ci, level);
     }
 
+    uint64_t tsEnd = OS::get_singleton()->get_ticks_usec();
+	m_lastRenderDuration = tsEnd - tsStart;
 }
 
 void AuroraWorldRenderer::DrawLevel(RID& ci, Level const* level)

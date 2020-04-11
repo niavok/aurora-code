@@ -37,11 +37,8 @@ void GasGasTransition::ApplyInput()
     NodeLink& linkB = m_links[1];
     m_kineticEnergy += linkA.inputKineticEnergy - linkB.inputKineticEnergy;
 
-    for(int i = 0; i < LinkCount; i++)
-    {
-        assert(m_links[i].inputKineticEnergy >= 0);
-        m_links[i].inputKineticEnergy = 0;
-    }
+    linkA.inputKineticEnergy = 0;
+    linkB.inputKineticEnergy = 0;
 }
 
 void GasGasTransition::Step(Scalar delta)
@@ -88,18 +85,13 @@ void GasGasTransition::Step(Scalar delta)
             pressureSourceIndex = 1;
         }
 
-        if(deltaAltitude == 0)
-        {
-             assert(!isnan(kineticAcceleration));
-        }
-
         GasNode& pressureSourceNode = *((GasNode*) m_links[pressureSourceIndex].node);
         GasNode& pressureDestinationNode = *((GasNode*) m_links[1-pressureSourceIndex].node);
 
         Scalar movingRatio = 1;
 
         // Proto
-        Scalar sourceN0 = pressureSourceNode.GetN() - movingRatio * pressureSourceNode.GetMovingN();
+        Scalar sourceN0 = pressureSourceNode.GetN()/* - movingRatio * pressureSourceNode.GetMovingN()*/;
 
         if(sourceN0 > 1e-15 && pressureSourceNode.GetThermalEnergy() > 0)
         {
@@ -108,7 +100,7 @@ void GasGasTransition::Step(Scalar delta)
             Scalar sourceMolarHeatCapacity = pressureSourceNode.GetEnergyPerK() / pressureSourceNode.GetN();
             Scalar sourceDh = pressureSourceNode.GetHeight() - m_links[pressureSourceIndex].altitudeRelativeToNode;
 
-            Scalar destinationN0 = pressureDestinationNode.GetN() - movingRatio * pressureDestinationNode.GetMovingN();
+            Scalar destinationN0 = pressureDestinationNode.GetN()/* - movingRatio * pressureDestinationNode.GetMovingN()*/;
             Energy destinationE0 = destinationN0 > 0 ? pressureDestinationNode.GetThermalEnergy() * destinationN0 / pressureDestinationNode.GetN() : 0;
             Scalar destinationMolarMass = pressureDestinationNode.GetMolarMass();
             Scalar destinationMolarHeatCapacity = destinationN0 > 0 ? pressureDestinationNode.GetEnergyPerK() / pressureDestinationNode.GetN() : sourceMolarHeatCapacity;
@@ -307,31 +299,6 @@ void GasGasTransition::Step(Scalar delta)
     if(deltaAltitude != 0)
     {
         deltaPotentialEnergy = -deltaAltitude * deltaMass * PhysicalConstants::gravity * PhysicalConstants::potentialEnergyCoef;
-
-        if(deltaPotentialEnergy != 0)
-        {
-            if(newKineticEnergyDelta * deltaPotentialEnergy > 0)
-            {
-                // Kinetic energy in the right direction, it's free
-                //newKineticEnergyDelta += deltaPotentialEnergy;
-            }
-            else
-            {
-                // Kinetic energy in the opposite direction, remove as much acceleration as possible
-                /*if(abs(deltaPotentialEnergy) > abs(newKineticEnergyDelta))
-                {
-                    Energy thermalLoss = deltaPotentialEnergy + newKineticEnergyDelta;
-                    newKineticEnergyDelta = 0;
-
-                    // Take the remaining energy delta in the source node
-                    m_links[sourceIndex].outputThermalEnergy -= abs(thermalLoss);
-                }
-                else
-                {
-                    newKineticEnergyDelta += deltaPotentialEnergy;
-                }*/
-            }
-        }
     }
 
     assert(m_links[sourceIndex].outputKineticEnergy == 0);
@@ -406,6 +373,7 @@ void GasGasTransition::Step(Scalar delta)
     m_links[newSourceIndex].outputInternalEnergy -= (localKineticEnergyGain - deltaPotentialEnergy);
     Energy newLocalKineticEnergy =sign(newKineticEnergyDelta) * (kineticEnergySum + localKineticEnergyGain);
 
+#if 0
     Energy finalCheckEnergy = abs(newLocalKineticEnergy);
     finalCheckEnergy -= deltaPotentialEnergy; // The potential energy is exchanged from external
     for(int i = 0; i < LinkCount; i++)
@@ -417,7 +385,7 @@ void GasGasTransition::Step(Scalar delta)
 
     Energy energyCheckError = initialCheckEnergy - finalCheckEnergy;
     assert(std::abs(energyCheckError) < 1e-6);
-
+#endif
     m_kineticEnergy = newLocalKineticEnergy;
 }
 

@@ -127,15 +127,11 @@ Energy PhysicEngine::ComputeEnergy(const char* label)
 
 void PhysicEngine::PrepareTransitions()
 {
-    for(FluidNode* node : m_nodes)
-    {
-        node->PrepareTransitions();
-        // TODO move to post step to remove one compute cache ?
-        node->ComputeCache();
-
-        //__int128 check = ComputeEnergy("after prepare");
-        //assert(initialTotalEnergy == check);
-    }
+    // Prepare transition do nothing for now
+    // for(FluidNode* node : m_nodes)
+    // {
+    //     node->PrepareTransitions();
+    // }
 }
 
 void PhysicEngine::ApplyTransitionsInput()
@@ -170,13 +166,6 @@ void PhysicEngine::ApplyTransitionsToNodes()
 
     for(FluidNode* node : m_nodes)
     {
-#if 0
-        GasNode* gasNode = (GasNode*) node;
-        // Artificial radiation cooling
-        gasNode->TakeThermalEnergy(0.0001 * gasNode->GetThermalEnergy());
-#endif
-
-
         node->ApplyTransitions();
         node->ComputeCache();
     }

@@ -50,13 +50,13 @@ void WorldEditor::GenerateTestWorld2()
 {
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
-    int blockCountX = 80;
-    int blockCountY = 80;
+    int blockCountX = 1000;
+    int blockCountY = 20;
     Meter tileSize = 0.05;
     Meter2 levelPosition(0, 0);
     Meter levelDepth = 100;
 
-    Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, false); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, true); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
 
 
     TileComposition dryAir;
