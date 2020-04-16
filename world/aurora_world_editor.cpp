@@ -1,22 +1,92 @@
 #include "aurora_world_editor.h"
 #include "aurora_level.h"
 
+#include <assert.h>
+
 #include "../physics/aurora_physic_constants.h"
 #include "../physics/aurora_physic_types.h"
 
 
 namespace aurora {
 
-WorldEditor::WorldEditor(AuroraWorld& world)
-    : m_world(world)
+AuroraWorldEditor::AuroraWorldEditor()
+    : m_world(nullptr)
 {
 }
 
-WorldEditor::~WorldEditor()
+AuroraWorldEditor::~AuroraWorldEditor()
 {
 }
 
-void WorldEditor::GenerateTestWorld1()
+// void AuroraWorldEditor::set_world(Node* p_world) {
+//     assert(p_world->get_class() == AuroraWorld::get_class_static());
+// 	m_world = static_cast<AuroraWorld*>(p_world);
+// }
+
+Node* AuroraWorldEditor::get_world() const {
+	return m_world;
+}
+
+
+// void AuroraWorldEditor::set_world(const Ref<AuroraWorld> &p_world) {
+// 	m_testWorld = p_world;
+// }
+
+// Ref<AuroraWorld> AuroraWorldEditor::get_world() const {
+// 	return m_testWorld;
+// }
+
+void AuroraWorldEditor::_bind_methods() {
+    // ClassDB::bind_method(D_METHOD("set_pause", "pause"), &AuroraWorld::SetPause);
+    // ClassDB::bind_method(D_METHOD("is_paused"), &AuroraWorld::IsPaused);
+    // ClassDB::bind_method(D_METHOD("step"), &AuroraWorld::Step);
+
+    // ClassDB::bind_method(D_METHOD("get_last_update_duration"), &AuroraWorld::get_last_update_duration);
+
+    //ClassDB::bind_method(D_METHOD("set_world", "world"), &AuroraWorldEditor::set_world);
+	ClassDB::bind_method(D_METHOD("get_world"), &AuroraWorldEditor::get_world);
+
+	ClassDB::bind_method(D_METHOD("set_world_node", "node"), &AuroraWorldEditor::set_world_node);
+	ClassDB::bind_method(D_METHOD("get_world_node"), &AuroraWorldEditor::get_world_node);
+
+	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "world_node", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "AuroraWorld"), "set_world_node", "get_world_node");
+    //ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world", PROPERTY_HINT_RESOURCE_TYPE, "World"), "set_world", "get_world");
+}
+
+
+void AuroraWorldEditor::_notification(int p_what) {
+
+	switch (p_what) {
+    //     case NOTIFICATION_INTERNAL_PHYSICS_PROCESS: {
+    //         Variant delta = get_physics_process_delta_time();
+    //         Update(delta);
+    //     } break;
+		case NOTIFICATION_READY: {
+			if (has_node(m_targetWorldPath)) {
+				m_world = Object::cast_to<AuroraWorld>(get_node(m_targetWorldPath));
+			}
+			else
+			{
+				printf("set_world_node fail to find node %ls\n", String(m_targetWorldPath).c_str());
+				return;
+			}
+
+		} break;
+	}
+}
+
+void AuroraWorldEditor::set_world_node(const NodePath &p_node)
+{
+	m_targetWorldPath = p_node;
+	m_world = nullptr;
+}
+
+NodePath AuroraWorldEditor::get_world_node()
+{
+	return m_targetWorldPath;
+}
+
+void AuroraWorldEditor::GenerateTestWorld1()
 {
     int blockCountX = 2;
     int blockCountY = 80;
@@ -24,7 +94,7 @@ void WorldEditor::GenerateTestWorld1()
     Meter2 levelPosition(0, 0);
     Meter levelDepth = 100;
 
-    Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, false); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Level* surfaceLevel = m_world->CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, false); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
     Meter surfaceWidth = surfaceLevel->GetLevelSize().x;
     Meter surfaceHeight = surfaceLevel->GetLevelSize().y;
 
@@ -46,7 +116,7 @@ void WorldEditor::GenerateTestWorld1()
     PaintTiles(surfaceLevel, highPressureDryAir,  MeterRect(0, 30 * surfaceHeight/ blockCountY, surfaceWidth/ blockCountX, 30 * surfaceHeight/ blockCountY));
 }
 
-void WorldEditor::GenerateTestWorld2()
+void AuroraWorldEditor::GenerateTestWorld2()
 {
     //Level* surfaceLevel = m_world.CreateLevel(50, 8, 1, 1); // 1 x 1 blocks * 50 mm * 2^ 8 = 12.8 m x 12.8 m
     //Level* surfaceLevel = m_world.CreateLevel(50, 0, 256, 256); // 256 x 256 blocks * 50 mm * 2^ 1 = 12.8 m x 12.8 m
@@ -56,7 +126,7 @@ void WorldEditor::GenerateTestWorld2()
     Meter2 levelPosition(0, 0);
     Meter levelDepth = 100;
 
-    Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, true); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Level* surfaceLevel = m_world->CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, true); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
 
 
     TileComposition dryAir;
@@ -102,7 +172,7 @@ void WorldEditor::GenerateTestWorld2()
 }
 
 
-void WorldEditor::GenerateTestWorld3()
+void AuroraWorldEditor::GenerateTestWorld3()
 {
     int blockCountX = 50;
     int blockCountY = 20;
@@ -110,7 +180,7 @@ void WorldEditor::GenerateTestWorld3()
     Meter2 levelPosition(0, 0);
     Meter levelDepth = 100;
 
-    Level* surfaceLevel = m_world.CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, true); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
+    Level* surfaceLevel = m_world->CreateLevel(levelPosition, tileSize, levelDepth, blockCountX, blockCountY, true); // 20 x 1 blocks * 50 mm * 2^ 1 = 1 m x 1 m
     //cave1 = m_world.CreateLevel(64, 1,1); // 1 x 1 block = 64 m x 64 m
 
 
@@ -184,7 +254,7 @@ void WorldEditor::GenerateTestWorld3()
     //Repack();
 }
 
-void WorldEditor::PaintTiles(Level* level, TileComposition const& composition, MeterRect area)
+void AuroraWorldEditor::PaintTiles(Level* level, TileComposition const& composition, MeterRect area)
 {
     for(Tile* tile : level->GetTiles())
     {
@@ -192,7 +262,7 @@ void WorldEditor::PaintTiles(Level* level, TileComposition const& composition, M
     }
 }
 
-void WorldEditor::PaintTile(Level* level, Tile* tile, TileComposition const& composition, MeterRect area)
+void AuroraWorldEditor::PaintTile(Level* level, Tile* tile, TileComposition const& composition, MeterRect area)
 {
     //printf("PaintTile area=%ls tile_area=%ls\n", String(area).c_str(), String(m_worldArea).c_str());
 
@@ -209,7 +279,7 @@ void WorldEditor::PaintTile(Level* level, Tile* tile, TileComposition const& com
     }
 }
 
-void WorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
+void AuroraWorldEditor::SetTileComposition(Tile* tile, TileComposition composition)
 {
     Volume volume = tile->GetTotalVolume();
 

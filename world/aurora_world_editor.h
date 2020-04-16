@@ -1,6 +1,7 @@
 #ifndef AURORA_WORLD_EDITOR_H
 #define AURORA_WORLD_EDITOR_H
 
+#include "scene/2d/node_2d.h"
 #include "aurora_world.h"
 #include "aurora_tile.h"
 #include "../physics/aurora_physic_engine.h"
@@ -44,18 +45,29 @@ struct TileComposition
 };
 
 
-class WorldEditor{
-public:
-    WorldEditor(AuroraWorld& world);
+class AuroraWorldEditor : public Node2D {
+     GDCLASS(AuroraWorldEditor, Node2D)
 
-    virtual ~WorldEditor();
+protected:
+    static void _bind_methods();
+	void _notification(int p_what);
+
+	Node* get_world() const;
+
+	void set_world_node(const NodePath &p_node);
+	NodePath get_world_node();
+
+public:
+    AuroraWorldEditor();
+    virtual ~AuroraWorldEditor();
 
     void GenerateTestWorld1();
     void GenerateTestWorld2();
     void GenerateTestWorld3();
 
 private:
-    AuroraWorld& m_world;
+    AuroraWorld* m_world;
+	NodePath m_targetWorldPath;
 
     void PaintTiles(Level* level, TileComposition const& composition, MeterRect area);
     void PaintTile(Level* level, Tile* tile, TileComposition const& composition, MeterRect area);

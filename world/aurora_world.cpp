@@ -1,5 +1,5 @@
 #include "aurora_world.h"
-#include "aurora_world_editor.h"
+//#include "aurora_world_editor.h"
 #include "aurora_level.h"
 
 #include "core/os/os.h"
@@ -16,10 +16,9 @@ AuroraWorld::AuroraWorld()
     printf("AuroraWorld\n");
 
     //count = 0;
-    printf("plop1\n");
-    WorldEditor worldEditor(*this);
+    //AuroraWorldEditor worldEditor(*this);
     //worldEditor.GenerateTestWorld1();
-    worldEditor.GenerateTestWorld2();
+    //worldEditor.GenerateTestWorld2();
 
     printf("InitPhysics done\n");
     InitPhysics();

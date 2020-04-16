@@ -3,12 +3,14 @@
 #include "aurora.h"
 #include "world/aurora_world.h"
 #include "render/aurora_world_renderer.h"
+#include "world/aurora_world_editor.h"
 
 void register_aurora_types() {
 
 		ClassDB::register_class<aurora::AuroraGame>();
 		ClassDB::register_class<aurora::AuroraWorld>();
 		ClassDB::register_class<aurora::AuroraWorldRenderer>();
+		ClassDB::register_class<aurora::AuroraWorldEditor>();
 }
 
 void unregister_aurora_types() {
