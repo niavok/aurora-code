@@ -5,7 +5,7 @@
 
 namespace aurora
 {
-
+/*
 class AuroraGame : public Reference {
 	GDCLASS(AuroraGame, Reference);
 
@@ -21,7 +21,7 @@ public:
 
 	AuroraGame();
 };
-
+*/
 }
 
 #endif

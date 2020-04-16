@@ -1,7 +1,7 @@
 #include "aurora.h"
 
 namespace aurora {
-
+/*
 void AuroraGame::add(int value) {
 
     count += value;
@@ -27,5 +27,5 @@ void AuroraGame::_bind_methods() {
 AuroraGame::AuroraGame() {
     count = 0;
 }
-
+*/
 }

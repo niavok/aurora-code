@@ -6,3 +6,4 @@ env.add_source_files(env.modules_sources,"physics/*.cpp") # Add all cpp files to
 env.add_source_files(env.modules_sources,"world/*.cpp") # Add all cpp files to the build
 env.add_source_files(env.modules_sources,"tools/*.cpp") # Add all cpp files to the build
 env.add_source_files(env.modules_sources,"render/*.cpp") # Add all cpp files to the build
+env.add_source_files(env.modules_sources,"game/*.cpp") # Add all cpp files to the build
