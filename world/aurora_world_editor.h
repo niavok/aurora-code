@@ -52,10 +52,10 @@ protected:
     static void _bind_methods();
 	void _notification(int p_what);
 
-	Node* get_world() const;
+	Ref<AuroraWorld> get_world() const;
 
-	void set_world_node(const NodePath &p_node);
-	NodePath get_world_node();
+	/*void set_world_node(const NodePath &p_node);
+	NodePath get_world_node();*/
 
 public:
     AuroraWorldEditor();
@@ -66,7 +66,7 @@ public:
     void GenerateTestWorld3();
 
 private:
-    AuroraWorld* m_world;
+    Ref<AuroraWorld> m_world;
 	NodePath m_targetWorldPath;
 
     void PaintTiles(Level* level, TileComposition const& composition, MeterRect area);

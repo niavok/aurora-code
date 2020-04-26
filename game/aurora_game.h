@@ -2,17 +2,23 @@
 #define AURORA_GAME_H
 
 #include "core/reference.h"
+#include "../world/aurora_world.h"
 
 namespace aurora {
 class AuroraGame : public Reference {
 	GDCLASS(AuroraGame, Reference);
 protected:
 	static void _bind_methods();
+
 public:
 	AuroraGame();
 	virtual ~AuroraGame();
 
 	void Save();
+
+	Ref<AuroraWorld> GetWorld();
+private:
+	Ref<AuroraWorld> m_world;
 };
 
 }

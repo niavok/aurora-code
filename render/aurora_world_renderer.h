@@ -4,12 +4,9 @@
 #include "scene/2d/node_2d.h"
 #include "scene/gui/control.h"
 
+#include "../game/aurora_game_manager.h"
 
 namespace aurora {
-
-class AuroraWorld;
-class Tile;
-class Level;
 
 class AuroraWorldRenderer : public Node2D {
      GDCLASS(AuroraWorldRenderer, Node2D)
@@ -26,8 +23,8 @@ public:
 	virtual Rect2 _edit_get_rect() const;
 	virtual bool _edit_use_rect() const;
 
-	void set_world_node(const NodePath &p_node);
-	NodePath get_world_node();
+	void set_game_manager_node(const NodePath &p_node);
+	NodePath get_game_manager_node();
 
 	void set_texture1(const Ref<Texture> &p_texture);
 	Ref<Texture> get_texture1() const;
@@ -44,8 +41,9 @@ private:
     void DrawTile(RID& ci, Tile const* tile);
 	void DrawTileOverlay(RID& ci, Tile const* tile);
 
-	NodePath m_targetWorldPath;
-	AuroraWorld const* m_targetWorld;
+	NodePath m_targetGameManagerPath;
+	AuroraGameManager* m_gameManager;
+	Ref<AuroraWorld> m_renderWorld;
 	Ref<Texture> m_testTexture1;
 	Ref<Texture> m_testTexture2;
     Control *m_control;

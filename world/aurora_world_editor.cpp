@@ -23,7 +23,7 @@ AuroraWorldEditor::~AuroraWorldEditor()
 // 	m_world = static_cast<AuroraWorld*>(p_world);
 // }
 
-Node* AuroraWorldEditor::get_world() const {
+Ref<AuroraWorld> AuroraWorldEditor::get_world() const {
 	return m_world;
 }
 
@@ -46,10 +46,10 @@ void AuroraWorldEditor::_bind_methods() {
     //ClassDB::bind_method(D_METHOD("set_world", "world"), &AuroraWorldEditor::set_world);
 	ClassDB::bind_method(D_METHOD("get_world"), &AuroraWorldEditor::get_world);
 
-	ClassDB::bind_method(D_METHOD("set_world_node", "node"), &AuroraWorldEditor::set_world_node);
-	ClassDB::bind_method(D_METHOD("get_world_node"), &AuroraWorldEditor::get_world_node);
+	//ClassDB::bind_method(D_METHOD("set_world_node", "node"), &AuroraWorldEditor::set_world_node);
+	//ClassDB::bind_method(D_METHOD("get_world_node"), &AuroraWorldEditor::get_world_node);
 
-	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "world_node", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "AuroraWorld"), "set_world_node", "get_world_node");
+	//ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "world_node", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "AuroraWorld"), "set_world_node", "get_world_node");
     //ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world", PROPERTY_HINT_RESOURCE_TYPE, "World"), "set_world", "get_world");
 }
 
@@ -62,20 +62,20 @@ void AuroraWorldEditor::_notification(int p_what) {
     //         Update(delta);
     //     } break;
 		case NOTIFICATION_READY: {
-			if (has_node(m_targetWorldPath)) {
+			/*if (has_node(m_targetWorldPath)) {
 				m_world = Object::cast_to<AuroraWorld>(get_node(m_targetWorldPath));
 			}
 			else
 			{
 				printf("set_world_node fail to find node %ls\n", String(m_targetWorldPath).c_str());
 				return;
-			}
+			}*/
 
 		} break;
 	}
 }
 
-void AuroraWorldEditor::set_world_node(const NodePath &p_node)
+/*void AuroraWorldEditor::set_world_node(const NodePath &p_node)
 {
 	m_targetWorldPath = p_node;
 	m_world = nullptr;
@@ -84,7 +84,7 @@ void AuroraWorldEditor::set_world_node(const NodePath &p_node)
 NodePath AuroraWorldEditor::get_world_node()
 {
 	return m_targetWorldPath;
-}
+}*/
 
 void AuroraWorldEditor::GenerateTestWorld1()
 {

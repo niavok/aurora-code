@@ -8,26 +8,26 @@
 
 #include <vector>
 
+#include "core/reference.h"
+
+
 namespace aurora {
 
 class Level;
 class Tile;
 
-class AuroraWorld : public Node {
-    GDCLASS(AuroraWorld, Node)
-
-    virtual ~AuroraWorld();
-
-    int count;
+class AuroraWorld : public Reference {
+    GDCLASS(AuroraWorld, Reference)
 
     int64_t get_last_update_duration();
 
 protected:
     static void _bind_methods();
-    void _notification(int p_what);
+    //void _notification(int p_what);
 
 public:
     AuroraWorld();
+	virtual ~AuroraWorld();
 
     void Update(Scalar deltaTime);
 

@@ -13,7 +13,7 @@ namespace aurora {
 AuroraWorld::AuroraWorld()
     : m_isPaused(true)
 {
-    printf("AuroraWorld\n");
+    printf("new AuroraWorld\n");
 
     //count = 0;
     //AuroraWorldEditor worldEditor(*this);
@@ -31,6 +31,8 @@ AuroraWorld::~AuroraWorld()
     {
         delete level;
     }
+
+	printf("delete AuroraWorld\n");
 }
 
 void AuroraWorld::_bind_methods() {
@@ -41,7 +43,7 @@ void AuroraWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_last_update_duration"), &AuroraWorld::get_last_update_duration);
 }
 
-
+/*
 void AuroraWorld::_notification(int p_what) {
 
      switch (p_what) {
@@ -53,7 +55,7 @@ void AuroraWorld::_notification(int p_what) {
             set_physics_process_internal(true);
         } break;
     }
-}
+}*/
 
 
 

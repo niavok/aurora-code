@@ -29,7 +29,7 @@ static real_t MeterToGodot(Meter distance)
 }
 
 AuroraWorldRenderer::AuroraWorldRenderer()
-	: m_targetWorld(nullptr)
+	: m_gameManager(nullptr)
 {
     m_control = memnew(Control);
     m_debugFont = m_control->get_font("mono_font", "Fonts");
@@ -50,26 +50,26 @@ AuroraWorldRenderer::~AuroraWorldRenderer()
 //if (!target_node_override && !target_node_path_override.is_empty())
 //	target_node_override = Object::cast_to<Spatial>(get_node(target_node_path_override));
 
-void AuroraWorldRenderer::set_world_node(const NodePath &p_node)
+void AuroraWorldRenderer::set_game_manager_node(const NodePath &p_node)
 {
 
-	printf("set_world_node p_node=%ls\n", String(p_node).c_str());
+	printf("set_game_manager_node p_node=%ls\n", String(p_node).c_str());
 
 
-	m_targetWorldPath = p_node;
-	m_targetWorld = nullptr;
+	m_targetGameManagerPath = p_node;
+	m_gameManager = nullptr;
 }
 
-NodePath AuroraWorldRenderer::get_world_node()
+NodePath AuroraWorldRenderer::get_game_manager_node()
 {
-	return m_targetWorldPath;
+	return m_targetGameManagerPath;
 }
 
 
 void AuroraWorldRenderer::_bind_methods() {
 
-	ClassDB::bind_method(D_METHOD("set_world_node", "node"), &AuroraWorldRenderer::set_world_node);
-	ClassDB::bind_method(D_METHOD("get_world_node"), &AuroraWorldRenderer::get_world_node);
+	ClassDB::bind_method(D_METHOD("set_game_manager_node", "node"), &AuroraWorldRenderer::set_game_manager_node);
+	ClassDB::bind_method(D_METHOD("get_game_manager_node"), &AuroraWorldRenderer::get_game_manager_node);
 
 	ClassDB::bind_method(D_METHOD("set_texture1", "texture"), &AuroraWorldRenderer::set_texture1);
 	ClassDB::bind_method(D_METHOD("get_texture1"), &AuroraWorldRenderer::get_texture1);
@@ -80,7 +80,7 @@ void AuroraWorldRenderer::_bind_methods() {
 
 
 
-	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "world_node", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "AuroraWorld"), "set_world_node", "get_world_node");
+	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "game_manager_node", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "AuroraGameManager"), "set_game_manager_node", "get_game_manager_node");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture1", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), "set_texture1", "get_texture1");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture2", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), "set_texture2", "get_texture2");
 
@@ -108,21 +108,26 @@ void AuroraWorldRenderer::_notification(int p_what) {
 			if (m_testTexture2.is_null())
 				return;
 
-			if (has_node(m_targetWorldPath)) {
-				m_targetWorld = Object::cast_to<AuroraWorld>(get_node(m_targetWorldPath));
+			if (has_node(m_targetGameManagerPath)) {
+				m_gameManager = Object::cast_to<AuroraGameManager>(get_node(m_targetGameManagerPath));
 			}
 			else
 			{
-				printf("set_world_node fail to find node %ls\n", String(m_targetWorldPath).c_str());
+				printf("fail to find game manager node %ls\n", String(m_targetGameManagerPath).c_str());
 				return;
 			}
 
 
 
-			if(m_targetWorld != nullptr)
+			if(m_gameManager != nullptr && m_gameManager->GetGame() != nullptr)
 			{
+				m_renderWorld = m_gameManager->GetGame()->GetWorld();
 				RID ci = get_canvas_item();
 				DrawWorld(ci);
+			}
+			else
+			{
+				m_renderWorld.unref();
 			}
 
 
@@ -194,7 +199,7 @@ void AuroraWorldRenderer::DrawWorld(RID& ci)
 {
 	uint64_t tsStart = OS::get_singleton()->get_ticks_usec();
 
-    for(Level* level : m_targetWorld->GetLevels())
+    for(Level* level : m_renderWorld->GetLevels())
     {
         DrawLevel(ci, level);
     }
@@ -404,9 +409,9 @@ void AuroraWorldRenderer::DrawTile(RID& ci, Tile const* tile)
 
 Rect2 AuroraWorldRenderer::_edit_get_rect() const
 {
-    if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_targetWorld != nullptr && m_targetWorld->GetLevels().size() > 0)
+    if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_renderWorld.is_valid() && m_renderWorld->GetLevels().size() > 0)
 	{
-        Level* firstLevel = m_targetWorld->GetLevels()[0];
+        Level* firstLevel = m_renderWorld->GetLevels()[0];
         return Rect2(MeterPositionToGodot(firstLevel->GetLevelBottomLeftPosition()) , MeterPositionToGodot(firstLevel->GetLevelSize()));
 	}
 	return Rect2(0, 0, 0, 0);
@@ -414,7 +419,7 @@ Rect2 AuroraWorldRenderer::_edit_get_rect() const
 
 bool AuroraWorldRenderer::_edit_use_rect() const
 {
-	if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_targetWorld != nullptr)
+	if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_renderWorld.is_valid())
 		return true;
 
 	return false;
