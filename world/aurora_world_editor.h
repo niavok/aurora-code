@@ -45,21 +45,20 @@ struct TileComposition
 };
 
 
-class AuroraWorldEditor : public Node2D {
-     GDCLASS(AuroraWorldEditor, Node2D)
+class AuroraWorldEditor : public Reference {
+	GDCLASS(AuroraWorldEditor, Reference)
 
 protected:
-    static void _bind_methods();
-	void _notification(int p_what);
-
-	Ref<AuroraWorld> get_world() const;
-
-	/*void set_world_node(const NodePath &p_node);
-	NodePath get_world_node();*/
+	static void _bind_methods();
 
 public:
-    AuroraWorldEditor();
-    virtual ~AuroraWorldEditor();
+	AuroraWorldEditor();
+	virtual ~AuroraWorldEditor();
+
+	Ref<AuroraWorld> GetWorld() const;
+	void SetWorld(Ref<AuroraWorld> world);
+
+	Ref<AuroraLevel> CreateEmptyLevel();
 
     void GenerateTestWorld1();
     void GenerateTestWorld2();
@@ -69,11 +68,11 @@ private:
     Ref<AuroraWorld> m_world;
 	NodePath m_targetWorldPath;
 
-    void PaintTiles(Level* level, TileComposition const& composition, MeterRect area);
-    void PaintTile(Level* level, Tile* tile, TileComposition const& composition, MeterRect area);
+    void PaintTiles(Ref<AuroraLevel> level, TileComposition const& composition, MeterRect area);
+    void PaintTile(Ref<AuroraLevel> level, Tile* tile, TileComposition const& composition, MeterRect area);
     void SetTileComposition(Tile* tile, TileComposition composition);
 
-    void Repack(Level* level);
+    void Repack(AuroraLevel* level);
 };
 
 }

@@ -141,8 +141,8 @@ void GasNode::MigrateKineticEnergy()
 
 
     Scalar sectionSum = 0;
-    
-    auto TakeEnergy = [&energyByDirection](Transition::Direction direction, Scalar ratio) 
+
+    auto TakeEnergy = [&energyByDirection](Transition::Direction direction, Scalar ratio)
     {
         Energy takenEnergy  = Energy(energyByDirection[direction] * ratio);
         energyByDirection[direction] -= takenEnergy;
@@ -157,7 +157,7 @@ void GasNode::MigrateKineticEnergy()
         Transition::NodeLink* link = transitionLink.transition->GetNodeLink(transitionLink.index);
 
         Transition::Direction linkDirection = transitionLink.transition->GetDirection(transitionLink.index);
-        
+
         Energy energyToDispatch = link->outputKineticEnergy;
 
         Energy forwardEnergy = energyToDispatch * DiffusionFactor;
@@ -170,7 +170,7 @@ void GasNode::MigrateKineticEnergy()
         energyByDirection[linkDirection.Next()] += leftEnergy;
         energyByDirection[linkDirection.Previous()] += energyToDispatch;
         link->outputKineticEnergy = 0;
-        
+
         sectionSumByDirection[linkDirection] += transitionLink.transition->GetSection();
         sectionSum += transitionLink.transition->GetSection();
     }
@@ -247,8 +247,8 @@ void GasNode::MigrateKineticEnergy()
             energyByDirection[i] = 0;
             energyByDirection[i + 2] = 0;
         }
-        
-        
+
+
 
         {
             //Energy finalEnergyCheck = ComputeEnergy();
@@ -287,14 +287,14 @@ void GasNode::MigrateKineticEnergy()
         {
             assert(energyByDirection[rightIndex] != 0);
             energyByDirection[rightIndex] += divertedEnergy[i];
-        }        
+        }
     }
 */
     for(int i = 0; i < 2; i++)
     {
        // assert(energyByDirection[i] * energyByDirection[i+2] == 0);
     }
-    
+
 
     // Dispatch energy
     for(TransitionLink& transitionLink : m_transitionLinks)
@@ -510,10 +510,17 @@ void GasNode::ComputeCache()
     // Compute elastic energy
     //Quantity pressureN = m_cacheN - m_movingN; // Exclude moving N from pressure computation
     Quantity pressureN = m_cacheN;
-    Energy internalEnergy = m_inputInternalEnergy + m_outputInternalEnergy;
-    Scalar A = pressureN * PhysicalConstants::gasConstant / (m_volume * m_cacheEnergyPerK);
-    m_cachePressure = A * internalEnergy / (1 + A*m_volume * PhysicalConstants::gasElasticCoef);
-    assert(m_cachePressure >= 0);
+	Energy internalEnergy = m_inputInternalEnergy + m_outputInternalEnergy;
+	if(pressureN == 0)
+	{
+		m_cachePressure = 0;
+	}
+	else
+	{
+    	Scalar A = pressureN * PhysicalConstants::gasConstant / (m_volume * m_cacheEnergyPerK);
+    	m_cachePressure = A * internalEnergy / (1 + A*m_volume * PhysicalConstants::gasElasticCoef);
+	}
+	assert(m_cachePressure >= 0);
 
     Energy elasticEnergy = PhysicalConstants::gasElasticCoef * m_cachePressure * m_volume;
     Energy thermalEnergy = internalEnergy - elasticEnergy;

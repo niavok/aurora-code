@@ -199,7 +199,7 @@ void AuroraWorldRenderer::DrawWorld(RID& ci)
 {
 	uint64_t tsStart = OS::get_singleton()->get_ticks_usec();
 
-    for(Level* level : m_renderWorld->GetLevels())
+    for(Ref<AuroraLevel> level : m_renderWorld->GetLevels())
     {
         DrawLevel(ci, level);
     }
@@ -208,7 +208,7 @@ void AuroraWorldRenderer::DrawWorld(RID& ci)
 	m_lastRenderDuration = tsEnd - tsStart;
 }
 
-void AuroraWorldRenderer::DrawLevel(RID& ci, Level const* level)
+void AuroraWorldRenderer::DrawLevel(RID& ci, Ref<AuroraLevel> const& level)
 {
 	drawTileCount = 0;
 
@@ -229,7 +229,7 @@ void AuroraWorldRenderer::DrawLevel(RID& ci, Level const* level)
 void AuroraWorldRenderer::DrawTileOverlay(RID& ci, Tile const* tile)
 {
 	GasNode const& gas = tile->GetGazNode();
-	Vector2 tilePosition = MeterPositionToGodot(tile->GetBottomLeftPosition());
+	//Vector2 tilePosition = MeterPositionToGodot(tile->GetBottomLeftPosition());
 
 	// Draw flow
 	for(TransitionLink const & transitionLink : gas.GetTransitionLinks())
@@ -411,7 +411,7 @@ Rect2 AuroraWorldRenderer::_edit_get_rect() const
 {
     if (m_testTexture1.is_valid() && m_testTexture2.is_valid() && m_renderWorld.is_valid() && m_renderWorld->GetLevels().size() > 0)
 	{
-        Level* firstLevel = m_renderWorld->GetLevels()[0];
+        Ref<AuroraLevel> firstLevel = m_renderWorld->GetLevels()[0];
         return Rect2(MeterPositionToGodot(firstLevel->GetLevelBottomLeftPosition()) , MeterPositionToGodot(firstLevel->GetLevelSize()));
 	}
 	return Rect2(0, 0, 0, 0);

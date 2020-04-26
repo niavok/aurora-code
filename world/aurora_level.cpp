@@ -4,7 +4,19 @@
 
 namespace aurora {
 
-Level::Level(Meter2 levelBottomLeftPosition, Meter tileSize, Meter levelDepth, int tileHCount, int tileVCount, bool horizontalLoop)
+
+void AuroraLevel::_bind_methods() {
+
+	ClassDB::bind_method(D_METHOD("get_name"), &AuroraLevel::GetName);
+}
+
+AuroraLevel::AuroraLevel()
+	: AuroraLevel(Meter2(1,1), 1.0, 1.0, 1, 1, false)
+{
+
+}
+
+AuroraLevel::AuroraLevel(Meter2 levelBottomLeftPosition, Meter tileSize, Meter levelDepth, int tileHCount, int tileVCount, bool horizontalLoop)
     : m_tileSize(tileSize)
     , m_levelDepth(levelDepth)
     , m_tileHCount(tileHCount)
@@ -29,7 +41,7 @@ Level::Level(Meter2 levelBottomLeftPosition, Meter tileSize, Meter levelDepth, i
     printf("new Level: %lu tiles created (%f x %f m)\n", m_tiles.size(), m_levelSize.x, m_levelSize.y);
 }
 
-void Level::ForEachTransition(std::function<void(Tile* tileA, Tile* tileB, Transition::Direction direction)> callback)
+void AuroraLevel::ForEachTransition(std::function<void(Tile* tileA, Tile* tileB, Transition::Direction direction)> callback)
 {
     // Vertical transition, skip top line
     for(int y = 0; y < m_tileVCount - 1; y++)
@@ -59,7 +71,12 @@ void Level::ForEachTransition(std::function<void(Tile* tileA, Tile* tileB, Trans
     }
 }
 
-Tile* Level::GetTileAtIndex(int x, int y)
+String const& AuroraLevel::GetName()
+{
+	return m_name;
+}
+
+Tile* AuroraLevel::GetTileAtIndex(int x, int y)
 {
     size_t index = x + y * m_tileHCount;
     return m_tiles[index];

@@ -3,6 +3,7 @@
 
 #include "core/reference.h"
 #include "../world/aurora_world.h"
+#include "../world/aurora_world_editor.h"
 
 namespace aurora {
 class AuroraGame : public Reference {
@@ -17,8 +18,12 @@ public:
 	void Save();
 
 	Ref<AuroraWorld> GetWorld();
+	Ref<AuroraWorldEditor> GetWorldEditor();
 private:
 	Ref<AuroraWorld> m_world;
+	Ref<AuroraWorldEditor> m_worldEditor;
+
+	bool m_isPaused;
 };
 
 }

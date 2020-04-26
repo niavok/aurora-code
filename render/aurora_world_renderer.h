@@ -37,7 +37,7 @@ public:
 private:
 
 	void DrawWorld(RID& ci);
-    void DrawLevel(RID& ci, Level const* level);
+    void DrawLevel(RID& ci, Ref<AuroraLevel> const& level);
     void DrawTile(RID& ci, Tile const* tile);
 	void DrawTileOverlay(RID& ci, Tile const* tile);
 

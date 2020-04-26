@@ -2,15 +2,24 @@
 #define AURORA_LEVEL_H
 
 
+#include "core/reference.h"
+
+
 #include "aurora_tile.h"
 #include <vector>
 #include <functional>
 
 namespace aurora {
 
-class Level {
+class AuroraLevel : public Reference {
+    GDCLASS(AuroraLevel, Reference)
+
+protected:
+    static void _bind_methods();
 
 public:
+	String const& GetName();
+
     //static scalar const MinTileSize;
     static int const TileChildEdgeCount;
     static int const TileChildCount;
@@ -20,7 +29,8 @@ public:
     //void reset();
     //int get_total() const;
 
-    Level(Meter2 levelBottomLeftPosition, Meter tileSize, Meter levelDepth, int tileHCount, int tileVCount, bool horizontalLoop);
+	AuroraLevel();
+    AuroraLevel(Meter2 levelBottomLeftPosition, Meter tileSize, Meter levelDepth, int tileHCount, int tileVCount, bool horizontalLoop);
 
     //void PaintTile(Rect2 area, AuroraMaterial const& material);
 
@@ -45,6 +55,7 @@ public:
     Tile* GetTileAtIndex(int x, int y);
 
 private:
+	String m_name;
     std::vector<Tile*> m_tiles;
     Meter m_tileSize;
     Meter m_levelDepth;

@@ -11,7 +11,7 @@
 
 
 namespace aurora {
-class Level;
+class AuroraLevel;
 
 /*
 
@@ -101,7 +101,7 @@ public:
 //    void SetTemperature(scalar temperature);
 
 
-    
+
     Volume GetTotalVolume() const;
 
 //    MaterialComposition& GetSolidComposition();
@@ -115,7 +115,7 @@ private:
     TileContent(TileContent& content); // Not recommanded
 
 
-    
+
 
 //    scalar m_isPowder;
 
